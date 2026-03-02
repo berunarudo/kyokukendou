@@ -1,0 +1,3348 @@
+﻿<!doctype html>
+<html lang="ja">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>極剣道</title>
+  <style>
+    :root {
+      --bg: #15171b;
+      --panel: #1d2026;
+      --line: #323744;
+      --text: #f2f4f8;
+      --muted: #a2abbb;
+      --accent: #f59e0b;
+      --danger: #ef4444;
+      --ok: #22c55e;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Yu Gothic UI", "Hiragino Kaku Gothic ProN", Meiryo, sans-serif;
+      color: var(--text);
+      background:
+        radial-gradient(circle at 20% 10%, #2a2f3a 0%, transparent 40%),
+        radial-gradient(circle at 80% 90%, #262018 0%, transparent 40%),
+        var(--bg);
+      display: flex;
+      justify-content: center;
+      padding: 16px;
+    }
+
+    .app {
+      width: min(1100px, 100%);
+      display: grid;
+      grid-template-rows: auto 1fr auto auto;
+      gap: 12px;
+    }
+
+    .title-screen {
+      width: min(900px, 100%);
+      min-height: calc(100vh - 32px);
+      display: grid;
+      place-items: center;
+    }
+
+    .title-card {
+      width: min(720px, 100%);
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 14px;
+      padding: 24px;
+    }
+
+    .title-card h1 {
+      margin: 0 0 12px;
+      font-size: clamp(34px, 6vw, 62px);
+      letter-spacing: 0.08em;
+    }
+
+    .title-story {
+      margin: 0 0 20px;
+      color: #d9dfeb;
+      line-height: 1.8;
+      white-space: pre-line;
+      font-size: 15px;
+    }
+
+    .title-actions {
+      display: flex;
+      gap: 10px;
+    }
+
+    .title-btn {
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 10px;
+      padding: 10px 14px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .panel {
+      background: var(--panel);
+      border: 1px solid var(--line);
+      border-radius: 10px;
+      padding: 12px;
+    }
+
+    .top h2,
+    .left h3,
+    .right h3,
+    .bottom h3 {
+      margin: 0 0 8px;
+      font-size: 14px;
+      color: var(--muted);
+      font-weight: 700;
+      letter-spacing: 0.04em;
+    }
+
+    .top-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 8px;
+    }
+
+    .top-header h2 { margin: 0; }
+
+    .tools {
+      display: flex;
+      gap: 8px;
+    }
+
+    .tool-btn {
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .tool-btn:hover { filter: brightness(1.08); }
+    .tool-btn:active { transform: scale(0.97); }
+    .tool-btn.hidden { display: none; }
+
+    .dev-tools {
+      position: fixed;
+      right: 12px;
+      bottom: 12px;
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      z-index: 20;
+    }
+
+    .dev-toggle {
+      border: 1px solid #6b7280;
+      background: #111827;
+      color: #e5e7eb;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .dev-toggle.on {
+      border-color: #22c55e;
+      color: #86efac;
+    }
+
+    .rescue-toggle {
+      border: 1px solid #7c2d12;
+      background: #3f1a0d;
+      color: #fed7aa;
+      border-radius: 999px;
+      padding: 6px 10px;
+      font-size: 11px;
+      font-weight: 800;
+      cursor: pointer;
+    }
+
+    .rescue-toggle.on {
+      border-color: #ef4444;
+      background: #7f1d1d;
+      color: #fecaca;
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.32);
+    }
+
+    .rescue-indicator {
+      position: fixed;
+      right: 12px;
+      bottom: 46px;
+      z-index: 19;
+      border: 1px solid #7f1d1d;
+      background: rgba(127, 29, 29, 0.95);
+      color: #fecaca;
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      display: none;
+    }
+
+    .rescue-indicator.show {
+      display: block;
+    }
+
+    .dev-panel {
+      position: fixed;
+      right: 12px;
+      bottom: 82px;
+      z-index: 20;
+      width: min(460px, calc(100vw - 24px));
+      max-height: 56vh;
+      overflow: auto;
+      border: 1px solid #374151;
+      border-radius: 10px;
+      background: rgba(10, 14, 22, 0.96);
+      color: #d1d5db;
+      padding: 10px;
+      font-size: 12px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .dev-panel.show { display: block; }
+
+    .dev-label {
+      color: #9ca3af;
+      margin: 6px 0 2px;
+      font-weight: 700;
+    }
+
+    #devStateJson {
+      margin: 0;
+      white-space: pre-wrap;
+      word-break: break-word;
+      background: #0b1220;
+      border: 1px solid #374151;
+      border-radius: 8px;
+      padding: 8px;
+    }
+
+    .rock-meta {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 6px;
+    }
+
+    .rock-value {
+      font-size: 28px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .bar {
+      width: 100%;
+      height: 18px;
+      border-radius: 999px;
+      background: #0f1218;
+      border: 1px solid var(--line);
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 100%;
+      background: linear-gradient(90deg, #f97316, #ef4444);
+      transition: width 0.15s ease;
+    }
+
+    .middle {
+      display: grid;
+      grid-template-columns: 1.2fr 1fr 1.2fr;
+      gap: 12px;
+      min-height: 360px;
+    }
+
+    .left {
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+
+    #log {
+      margin: 0;
+      padding: 8px;
+      list-style: none;
+      background: #12151c;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      height: 340px;
+      overflow-y: auto;
+      font-size: 13px;
+      line-height: 1.5;
+    }
+
+    #log li { color: #d8deea; }
+    #log li + li { margin-top: 4px; }
+
+    .left-tabs {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+
+    .tab-btn {
+      border: 1px solid var(--line);
+      background: #222733;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 6px 10px;
+      cursor: pointer;
+      font-weight: 700;
+      font-size: 12px;
+    }
+
+    .tab-btn.active {
+      background: #39445a;
+      border-color: #596a8a;
+    }
+
+    .history-panel {
+      display: none;
+      height: 340px;
+      overflow-y: auto;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #12151c;
+      padding: 10px;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+
+    .history-panel.show { display: block; }
+
+    .center {
+      display: grid;
+      place-items: center;
+      position: relative;
+    }
+
+    #attackBtn {
+      --blade-start: #e6e6e6;
+      --blade-mid: #cfcfcf;
+      --blade-end: #bdbdbd;
+      --tip: #cfcfcf;
+      --blade-glow: rgba(255, 255, 255, 0.15);
+      position: relative;
+      width: 220px;
+      height: 72px;
+      background: transparent;
+      border: none;
+      cursor: pointer;
+      user-select: none;
+      outline: none;
+      transition: transform 0.08s ease, filter 0.15s ease;
+    }
+
+    #attackBtn .blade {
+      position: absolute;
+      left: 36px;
+      top: 22px;
+      width: 148px;
+      height: 28px;
+      border-radius: 6px;
+      background: linear-gradient(90deg, var(--blade-start), var(--blade-mid) 55%, var(--blade-end));
+      box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.25),
+        0 0 18px var(--blade-glow);
+      transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+    }
+
+    #attackBtn .tip {
+      position: absolute;
+      left: 180px;
+      top: 22px;
+      width: 0;
+      height: 0;
+      border-top: 14px solid transparent;
+      border-bottom: 14px solid transparent;
+      border-left: 28px solid var(--tip);
+      filter: drop-shadow(0 4px 6px rgba(0, 0, 0, 0.25));
+      transition: transform 0.2s ease, opacity 0.2s ease, filter 0.2s ease;
+    }
+
+    #attackBtn .guard {
+      position: absolute;
+      left: 28px;
+      top: 18px;
+      width: 14px;
+      height: 36px;
+      border-radius: 6px;
+      background: #7a5b2b;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    #attackBtn .guard::before {
+      content: "";
+      position: absolute;
+      left: -18px;
+      top: 14px;
+      width: 46px;
+      height: 8px;
+      border-radius: 6px;
+      background: #9a7436;
+    }
+
+    #attackBtn .grip {
+      position: absolute;
+      left: 4px;
+      top: 24px;
+      width: 26px;
+      height: 24px;
+      border-radius: 6px;
+      background: #3b2a14;
+      box-shadow: 0 4px 10px rgba(0, 0, 0, 0.25);
+    }
+
+    #attackBtn span {
+      position: absolute;
+      left: 76px;
+      top: 24px;
+      font-weight: 800;
+      letter-spacing: 0.12em;
+      color: #222;
+      text-shadow: 0 1px 0 rgba(255, 255, 255, 0.35);
+      font-size: 16px;
+    }
+
+    #attackBtn:hover {
+      transform: translateY(-1px);
+      filter: brightness(1.05);
+    }
+
+    #attackBtn:active {
+      transform: translateY(2px) scale(0.99);
+      filter: brightness(1.08);
+    }
+    #attackBtn:disabled {
+      cursor: not-allowed;
+      filter: grayscale(0.9) brightness(0.8);
+      transform: none;
+    }
+
+    #attackBtn.blade-flash .blade,
+    #attackBtn.blade-flash .tip {
+      animation: bladeFlash 0.08s ease-out;
+    }
+
+    #attackBtn.final-slash .blade,
+    #attackBtn.final-slash .tip {
+      filter: brightness(1.25);
+      box-shadow:
+        0 4px 10px rgba(0, 0, 0, 0.25),
+        0 0 26px rgba(255, 255, 255, 0.65);
+    }
+
+    #attackBtn.sword-break .blade-a {
+      clip-path: polygon(0 0, 56% 0, 48% 100%, 0 100%);
+      transform: translateX(-5px) rotate(-8deg);
+      opacity: 0.85;
+      filter: brightness(0.7);
+    }
+
+    #attackBtn.sword-break .blade-b {
+      clip-path: polygon(56% 0, 100% 0, 100% 100%, 48% 100%);
+      transform: translateX(9px) rotate(10deg);
+      opacity: 0.7;
+      filter: brightness(0.55);
+    }
+
+    #attackBtn.sword-break .tip {
+      transform: translateX(10px) rotate(10deg);
+      opacity: 0.6;
+      filter: brightness(0.5);
+    }
+
+    #attackBtn .spark {
+      position: absolute;
+      left: 112px;
+      top: 30px;
+      width: 6px;
+      height: 6px;
+      border-radius: 999px;
+      background: #fff7cc;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    #attackBtn.sword-break .spark { animation: sparkFly 0.25s ease-out forwards; }
+    #attackBtn.sword-break .spark.s1 { --sx: -22px; --sy: -14px; animation-delay: 0.02s; }
+    #attackBtn.sword-break .spark.s2 { --sx: 18px; --sy: -18px; animation-delay: 0.04s; }
+    #attackBtn.sword-break .spark.s3 { --sx: 8px; --sy: 16px; animation-delay: 0.01s; }
+
+    #clearMessage {
+      position: absolute;
+      bottom: 22px;
+      padding: 8px 14px;
+      border-radius: 8px;
+      background: rgba(34, 197, 94, 0.16);
+      border: 1px solid #22c55e;
+      color: #9df5be;
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      display: none;
+    }
+
+    #clearMessage.show { display: block; }
+
+    #nextRockBtn {
+      position: absolute;
+      bottom: -30px;
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 12px;
+      font-weight: 700;
+      cursor: pointer;
+      display: none;
+    }
+
+    #nextRockBtn.show { display: inline-block; }
+
+    .right-wrap {
+      display: grid;
+      grid-template-columns: 90px 1fr;
+      gap: 12px;
+      height: 100%;
+    }
+
+    .durability-col {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .v-gauge {
+      width: 38px;
+      height: 220px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: #11141a;
+      overflow: hidden;
+      position: relative;
+    }
+
+    .v-gauge-fill {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      top: 0;
+      left: 0;
+      background: linear-gradient(180deg, #22c55e, #15803d);
+      transition: height 0.15s ease;
+    }
+
+    .stats {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      font-size: 16px;
+    }
+
+    .label { color: var(--muted); font-size: 13px; }
+
+    .bottom {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      font-size: 22px;
+      font-weight: 800;
+      min-height: 60px;
+    }
+
+    .debug {
+      background: #10141b;
+      border: 1px dashed #44516a;
+      border-radius: 8px;
+      padding: 10px;
+      color: #c3d1ea;
+      font-size: 13px;
+      line-height: 1.5;
+      display: none;
+    }
+
+    .debug.show { display: block; }
+
+    #blackout {
+      position: fixed;
+      inset: 0;
+      background: #000;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 30;
+      display: none;
+    }
+
+    #blackout.show {
+      display: block;
+      animation: blackoutFx 1s ease forwards;
+    }
+
+    #bigSwordName {
+      position: fixed;
+      left: 50%;
+      top: 50%;
+      transform: translate(-50%, -50%) scale(0.95);
+      color: #f8fafc;
+      font-size: clamp(36px, 7vw, 84px);
+      font-weight: 900;
+      letter-spacing: 0.08em;
+      text-shadow: 0 8px 30px rgba(0, 0, 0, 0.65);
+      opacity: 0;
+      pointer-events: none;
+      z-index: 31;
+      display: none;
+      white-space: nowrap;
+    }
+
+    #bigSwordName.show {
+      display: block;
+      animation: swordNameFx 1s ease forwards;
+    }
+
+    #durabilityFrame.breaking {
+      animation: gaugeShake 0.5s ease;
+      background:
+        repeating-linear-gradient(-50deg, rgba(255,255,255,0.18) 0 6px, rgba(255,255,255,0) 6px 12px),
+        #200f12;
+      box-shadow: 0 0 18px rgba(239, 68, 68, 0.5);
+    }
+
+    #durabilityFrame.breaking .v-gauge-fill {
+      animation: flashRed 0.5s ease;
+      background: linear-gradient(180deg, #ef4444, #7f1d1d);
+    }
+
+    #rockBarContainer.crumble {
+      position: relative;
+      overflow: hidden;
+      background:
+        repeating-linear-gradient(-45deg, rgba(255,255,255,0.18) 0 5px, rgba(255,255,255,0) 5px 10px),
+        #121419;
+    }
+
+    #rockBarContainer.crumble::before,
+    #rockBarContainer.crumble::after {
+      content: "";
+      position: absolute;
+      top: 0;
+      width: 50%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.26);
+      pointer-events: none;
+    }
+
+    #rockBarContainer.crumble::before {
+      left: 0;
+      animation: splitLeft 0.8s ease forwards;
+    }
+
+    #rockBarContainer.crumble::after {
+      right: 0;
+      animation: splitRight 0.8s ease forwards;
+    }
+
+    #rockHpText.fade-out { animation: fadeOutText 0.8s ease forwards; }
+
+    @keyframes bladeFlash {
+      0% {
+        filter: brightness(1);
+        box-shadow:
+          0 4px 10px rgba(0, 0, 0, 0.25),
+          0 0 18px var(--blade-glow);
+      }
+      100% {
+        filter: brightness(1.28);
+        box-shadow:
+          0 4px 10px rgba(0, 0, 0, 0.25),
+          0 0 26px rgba(255, 255, 255, 0.55);
+      }
+    }
+
+    @keyframes sparkFly {
+      0% { opacity: 1; transform: translate(0, 0) scale(1); }
+      100% { opacity: 0; transform: translate(var(--sx), var(--sy)) scale(0.3); }
+    }
+
+    @keyframes flashRed {
+      0%, 100% { filter: brightness(1); }
+      40% { filter: brightness(1.8); }
+    }
+
+    @keyframes gaugeShake {
+      0% { transform: translateX(0); }
+      20% { transform: translateX(-4px); }
+      40% { transform: translateX(4px); }
+      60% { transform: translateX(-3px); }
+      80% { transform: translateX(3px); }
+      100% { transform: translateX(0); }
+    }
+
+    @keyframes blackoutFx {
+      0% { opacity: 0; }
+      10% { opacity: 0.88; }
+      90% { opacity: 0.88; }
+      100% { opacity: 0; }
+    }
+
+    @keyframes swordNameFx {
+      0% { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+      20% { opacity: 1; transform: translate(-50%, -50%) scale(1.02); }
+      100% { opacity: 0; transform: translate(-50%, -50%) scale(1.05); }
+    }
+
+    @keyframes splitLeft {
+      0% { transform: translateX(0); opacity: 1; }
+      100% { transform: translateX(-36px); opacity: 0; }
+    }
+
+    @keyframes splitRight {
+      0% { transform: translateX(0); opacity: 1; }
+      100% { transform: translateX(36px); opacity: 0; }
+    }
+
+    @keyframes fadeOutText {
+      0% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0.2; transform: translateY(-8px); }
+    }
+
+    dialog {
+      border: 1px solid var(--line);
+      border-radius: 12px;
+      width: min(560px, calc(100% - 24px));
+      background: #1a1e26;
+      color: var(--text);
+      padding: 16px;
+      max-height: 88vh;
+      overflow-y: auto;
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.65);
+    }
+
+    .modal-title {
+      margin: 0 0 10px;
+      font-size: 24px;
+    }
+
+    .modal-sticky-top {
+      position: sticky;
+      top: -16px;
+      z-index: 2;
+      display: flex;
+      justify-content: flex-end;
+      background: #1a1e26;
+      margin: -16px -16px 10px;
+      padding: 10px 12px;
+      border-bottom: 1px solid var(--line);
+    }
+
+    .modal-sticky-top button {
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 12px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .modal-row {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      margin-bottom: 8px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+    }
+
+    .modal-row button,
+    .modal-footer button {
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .modal-row button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .modal-note {
+      color: var(--muted);
+      font-size: 13px;
+      margin: 8px 0 14px;
+      line-height: 1.4;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 8px;
+      margin-top: 12px;
+    }
+
+    .buff-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 8px;
+      align-items: center;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      padding: 8px;
+      margin-top: 8px;
+      background: #171b22;
+    }
+
+    .buff-main {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      font-size: 12px;
+    }
+
+    .buff-main strong {
+      font-size: 13px;
+      color: #e8edf7;
+    }
+
+    .buff-item button {
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 7px 10px;
+      cursor: pointer;
+      font-weight: 700;
+    }
+
+    .buff-item button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .trait-select-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 8px;
+    }
+
+    .trait-select-btn {
+      border: 1px solid var(--line);
+      background: #2b3240;
+      color: var(--text);
+      border-radius: 8px;
+      padding: 10px 12px;
+      cursor: pointer;
+      font-weight: 700;
+      text-align: left;
+      line-height: 1.4;
+    }
+
+    @media (max-width: 900px) {
+      .middle { grid-template-columns: 1fr; }
+      .right-wrap { grid-template-columns: 70px 1fr; }
+      .v-gauge { height: 170px; }
+      #attackBtn {
+        width: 210px;
+      }
+      .top-header {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <section id="titleScreen" class="title-screen">
+    <article class="title-card">
+      <h1>極剣道</h1>
+      <p class="title-story">男が家を出ると、そこに大きな岩があった。
+男は邪魔に思い、岩をどかそうとした。
+しかし、男は剣しか持っていなかった。
+だから――切り続けることにした。</p>
+      <div class="title-actions">
+        <button id="startGameBtn" class="title-btn" type="button">開始（岩を斬る）</button>
+      </div>
+    </article>
+  </section>
+  <main id="mainContainer" class="app">
+    <section class="panel top">
+      <div class="top-header">
+        <h2>岩の耐久値</h2>
+        <div class="tools">
+          <button id="autoToggleBtn" class="tool-btn hidden" type="button">AUTO OFF</button>
+          <button id="resetBtn" class="tool-btn" type="button">データリセット</button>
+        </div>
+      </div>
+      <div id="rockStageText" class="rock-meta">岩ランク：1</div>
+      <div id="rockBonusText" class="rock-meta">岩ランクボーナス：XP ×1.00 / LvUP +1pt / 剣Pt獲得 ×1.00 / 欠片 ×1.00 / 欠片消費 ×1.00</div>
+      <div id="rockTraitText" class="rock-meta">岩の性質：通常岩（補正なし）</div>
+      <div id="wieldStatusText" class="rock-meta">流派：通常</div>
+      <div id="activeEventText" class="rock-meta">イベント：なし</div>
+      <div id="rockHpText" class="rock-value">0 / 0</div>
+      <div id="rockCutText" class="rock-meta" style="display:none;">断ち切った。</div>
+      <div id="rockBarContainer" class="bar"><div id="rockBar" class="bar-fill"></div></div>
+    </section>
+
+    <section class="middle">
+      <section class="panel left">
+        <div class="left-tabs">
+          <button id="tabLogBtn" class="tab-btn active" type="button">ログ</button>
+          <button id="tabHistoryBtn" class="tab-btn" type="button">剣歴</button>
+        </div>
+        <ul id="log"></ul>
+        <div id="historyPanel" class="history-panel">
+          <div>総斬撃回数: <span id="histTotalSlashes">0</span></div>
+          <div>総獲得剣験値: <span id="histTotalExp">0</span></div>
+          <div>総剣生回数: <span id="histTotalRebirth">0</span></div>
+          <div>剣質アップ回数: <span id="histTotalQualityUp">0</span></div>
+          <div>到達最高剣質: <span id="histMaxQuality">ウッドソード</span></div>
+          <div>岩ランク最高到達: <span id="histMaxRockStage">1</span></div>
+          <div>称号: <span id="histTitle">剣士</span></div>
+        </div>
+      </section>
+
+      <section class="panel center">
+        <button id="attackBtn" type="button" aria-label="剣闘">
+          <i class="blade blade-a" aria-hidden="true"></i>
+          <i class="blade blade-b" aria-hidden="true"></i>
+          <i class="tip" aria-hidden="true"></i>
+          <i class="grip" aria-hidden="true"></i>
+          <i class="guard" aria-hidden="true"></i>
+          <i class="spark s1" aria-hidden="true"></i>
+          <i class="spark s2" aria-hidden="true"></i>
+          <i class="spark s3" aria-hidden="true"></i>
+          <span>剣闘</span>
+        </button>
+        <div id="clearMessage">クリア！</div>
+        <button id="nextRockBtn" type="button">次の岩へ</button>
+      </section>
+
+      <section class="panel right">
+        <h3>剣ステータス</h3>
+        <div class="right-wrap">
+          <div class="durability-col">
+            <div class="label">耐久値</div>
+            <div id="durabilityFrame" class="v-gauge"><div id="durabilityGauge" class="v-gauge-fill"></div></div>
+            <div id="swordDurText">0 / 0</div>
+          </div>
+          <div class="stats">
+            <div class="label">切れ味</div>
+            <div id="sharpnessText">0</div>
+            <div class="label">剣験値</div>
+            <div id="expText">0 / 0</div>
+            <div class="label">累計斬撃回数</div>
+            <div id="slashCountText">0</div>
+            <div class="label">剣力レベル</div>
+            <div id="levelText">1</div>
+            <div class="label">剣ポイント</div>
+            <div id="pointText">0</div>
+            <div class="label">剣質片</div>
+            <div id="qualityShardText">0</div>
+          </div>
+        </div>
+      </section>
+    </section>
+
+    <section class="panel bottom">
+      <div id="swordNameText">現在の剣：ウッドソード</div>
+    </section>
+
+    <section id="debugPanel" class="debug">
+      <div id="debugQualityStage">剣質段階: -</div>
+      <div id="debugRequiredXp">必要XP: -</div>
+      <div id="debugQualityCost">剣質コスト: -</div>
+    </section>
+  </main>
+
+  <div id="blackout"></div>
+    <div id="bigSwordName"></div>
+  <dialog id="traitSelectModal">
+    <h2 class="modal-title">岩の性質を選ぶ</h2>
+    <div id="traitSelectStageText" class="modal-note"></div>
+    <div id="traitSelectList"></div>
+  </dialog>
+  <dialog id="ultimateClearModal">
+    <h2 class="modal-title">――アルティメット。</h2>
+    <div class="modal-note">終点に辿り着いた。</div>
+    <div class="modal-footer">
+      <button id="ultimateContinueBtn" type="button">このまま岩を切る</button>
+      <button id="ultimateHomeBtn" type="button">家に帰る</button>
+    </div>
+  </dialog>
+
+  <div class="dev-tools">
+    <button id="devToggleBtn" class="dev-toggle" type="button">DEV OFF</button>
+    <button id="rescueToggleBtn" class="rescue-toggle" type="button">救済 OFF</button>
+  </div>
+  <div id="rescueIndicator" class="rescue-indicator">救済モード作動中（1ms）</div>
+  <section id="devPanel" class="dev-panel">
+    <div class="dev-label">剣質直後XP軽減</div>
+    <div>Lv1〜10に 0.85x（アイアン以上で常時適用）</div>
+    <div class="dev-label">次レベル必要剣験値</div>
+    <div id="devXpFormula">-</div>
+    <div class="dev-label">剣質コスト計算</div>
+    <div id="devQualityCostCalc">-</div>
+    <div class="dev-label">1クリック最終ダメージ内訳（基礎+追加）</div>
+    <div id="devDamageBreakdown">-</div>
+    <div class="dev-label">イベントデバッグ</div>
+    <div id="devEventMeta">-</div>
+    <div id="devEventState">-</div>
+    <div class="dev-label">剣Pt獲得倍率</div>
+    <div id="devQualityGainMult">-</div>
+    <div class="dev-label">内部ステートJSON</div>
+    <pre id="devStateJson">{}</pre>
+  </section>
+
+  <dialog id="rebirthModal">
+    <div class="modal-sticky-top">
+      <button id="rebirthResumeTop" type="button">再開</button>
+    </div>
+    <h2 class="modal-title">剣生フェーズ</h2>
+    <div id="modalSwordInfo"></div>
+    <div id="modalPoints" class="modal-note"></div>
+    <div id="modalShards" class="modal-note"></div>
+    <div id="modalQualityCost" class="modal-note"></div>
+
+    <div class="modal-row">
+      <div>追加切れ味: <span id="allocSharp">0</span></div>
+      <div class="modal-actions">
+        <button id="addSharpnessBtn" type="button">+1</button>
+        <button id="addSharpness10Btn" type="button">+10</button>
+        <button id="addSharpness100Btn" type="button">+100</button>
+        <button id="addSharpnessMaxBtn" type="button">最大</button>
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <div>追加耐久: <span id="allocDurability">0</span></div>
+      <div class="modal-actions">
+        <button id="addDurabilityBtn" type="button">+1</button>
+        <button id="addDurability10Btn" type="button">+10</button>
+        <button id="addDurability100Btn" type="button">+100</button>
+        <button id="addDurabilityMaxBtn" type="button">最大</button>
+      </div>
+    </div>
+
+    <div class="modal-row">
+      <div>剣質: <span id="allocQuality">ウッドソード</span></div>
+      <button id="upgradeQualityBtn" type="button">剣質アップ（コスト可変）</button>
+    </div>
+
+    <div class="modal-row">
+      <div>自動攻撃（周回限定）</div>
+      <button id="unlockAutoBtn" type="button">自動攻撃を解禁（100pt）</button>
+    </div>
+    <div class="modal-row">
+      <div>二刀流（周回限定）</div>
+      <div class="modal-actions">
+        <button id="unlockDualWieldBtn" type="button">二刀流（30pt）</button>
+        <button id="toggleDualWieldBtn" type="button">二刀流 OFF</button>
+      </div>
+    </div>
+
+    <div class="modal-note">
+      剣質アップ成立時は、追加切れ味/追加耐久/剣ポイント/剣力レベル/剣験値がリセットされます。
+    </div>
+    <div id="buffShopWrap" class="modal-note">
+      <strong>永続バフ</strong>
+      <div id="buffShopList"></div>
+    </div>
+
+    <div class="modal-footer">
+      <button id="rebirthResume" type="button">再開</button>
+    </div>
+  </dialog>
+
+  <script>
+    const QUALITY_NAMES = [
+      "ウッド", "アイアン", "ゴールド", "ダイヤ", "プラチナ", "ミスリル",
+      "オリハルコン", "アダマンタイト", "スーパー", "ハイパー", "ウルトラ", "アルティメット"
+    ];
+    const SAVE_KEY = "kyokendou_save_v1";
+    const SAVE_VERSION = 8;
+    const MAX_VALUE = 1e15;
+    const KEEP_QUALITY_BUFF_COST = 200;
+    const AUTO_UNLOCK_COST = 100;
+    const AUTO_BASE_INTERVAL_MS = 200;
+    const AUTO_FAST_INTERVAL_MS = 80;
+    const AUTO_ULTRA_INTERVAL_MS = 50;
+    const AUTO_RESCUE_INTERVAL_MS = 1;
+    const ROCK_FLAVOR_HALF_TRIGGER_RATE = 0.2;
+    const ROCK_FLAVOR_POOLS = {
+      normal: [
+        { id: "n1", text: "岩は、まだ砕けない。" },
+        { id: "n2", text: "切る音だけが残る。" },
+        { id: "n3", text: "刃先が、静かに震える。" },
+        { id: "n4", text: "岩肌が、わずかに鳴いた。" }
+      ],
+      endgame: [
+        { id: "e1", text: "硬さの向こうに、意志がある。" },
+        { id: "e2", text: "斬撃は、深く世界を撫でる。" },
+        { id: "e3", text: "岩は沈黙し、剣だけが語る。" },
+        { id: "e4", text: "ここから先は、音すら重い。" }
+      ],
+      star: [
+        { id: "s1", text: "世界が、重なった。" },
+        { id: "s2", text: "始まりは、もう一度。" },
+        { id: "s3", text: "同じ岩が、別の顔で立つ。" },
+        { id: "s4", text: "星の数だけ、斬る理由がある。" }
+      ]
+    };
+    const ROCK_TRAITS = {
+      normal: {
+        name: "通常岩",
+        description: "補正なし",
+        hpMultiplier: 1,
+        xpMultiplier: 1,
+        damageMultiplier: 1,
+        eventInterval: 100
+      },
+      glitter: {
+        name: "輝岩",
+        description: "岩HP +30% / 獲得XP +25%",
+        hpMultiplier: 1.3,
+        xpMultiplier: 1.25,
+        damageMultiplier: 1,
+        eventInterval: 100
+      },
+      resonance: {
+        name: "共鳴岩",
+        description: "イベント間隔 100→80",
+        hpMultiplier: 1,
+        xpMultiplier: 1,
+        damageMultiplier: 1,
+        eventInterval: 80
+      },
+      dark: {
+        name: "暗黒岩",
+        description: "岩HP -25% / 最終ダメージ +30%",
+        hpMultiplier: 0.75,
+        xpMultiplier: 1,
+        damageMultiplier: 1.3,
+        eventInterval: 100
+      },
+      gold: {
+        name: "黄金岩",
+        description: "岩HP +50% / 獲得XP +120%",
+        hpMultiplier: 1.5,
+        xpMultiplier: 2.2,
+        damageMultiplier: 1,
+        eventInterval: 100
+      }
+    };
+    const ROCK_TRAITS_LV2 = {
+      glitter: {
+        name: "輝岩★",
+        description: "岩HP +50% / 獲得XP +40%",
+        hpMultiplier: 1.5,
+        xpMultiplier: 1.4,
+        damageMultiplier: 1,
+        eventInterval: 100
+      },
+      resonance: {
+        name: "共鳴岩★",
+        description: "イベント間隔 60",
+        hpMultiplier: 1,
+        xpMultiplier: 1,
+        damageMultiplier: 1,
+        eventInterval: 60
+      },
+      dark: {
+        name: "暗黒岩★",
+        description: "岩HP -25% / 最終ダメージ +50%",
+        hpMultiplier: 0.75,
+        xpMultiplier: 1,
+        damageMultiplier: 1.5,
+        eventInterval: 100
+      },
+      gold: {
+        name: "黄金岩★",
+        description: "岩HP +50% / 獲得XP +180%",
+        hpMultiplier: 1.5,
+        xpMultiplier: 2.8,
+        damageMultiplier: 1,
+        eventInterval: 100
+      }
+    };
+    const BUFF_DEFS = {
+      trainingMark: { name: "修練の刻印", maxLevel: 5, desc: "剣験値 +10% / Lv" },
+      masteryProof: { name: "熟練の証", maxLevel: 3, desc: "LvUP時の剣ポイント +1 / Lv" },
+      undyingBlade: { name: "不屈の刃", maxLevel: 3, desc: "剣の初期耐久 +20% / Lv" },
+      polishingSecret: { name: "研磨の極意", maxLevel: 5, desc: "切れ味の基礎値 +1 / Lv" },
+      sharpeningLevel: { name: "研ぎ澄まし", maxLevel: 9999, desc: "岩ランク由来の基礎切れ味補正を強化" },
+      aftershockMark: { name: "余波の刻印", maxLevel: 3, desc: "イベント持続 +2クリック / Lv" },
+      qualityCostReductionLevel: { name: "鍛錬の効率化", maxLevel: 4, desc: "剣質アップ必要ptを軽減（Lv1:-15% ... Lv4:-60%）" }
+    };
+
+    function createInitialState() {
+      return {
+        rock: {
+          rockStage: 1,
+          maxHp: 5000,
+          hp: 5000,
+          xpMultiplier: 1,
+          levelPointGain: 1
+        },
+        currentRockTrait: {
+          traits: [{ type: "normal", level: 1 }]
+        },
+        sword: {
+          quality: 0,
+          baseSharpness: 1,
+          baseDurability: 50,
+          allocSharpness: 0,
+          allocDurability: 0,
+          sharpness: 1,
+          maxDurability: 50,
+          durability: 50,
+          level: 1,
+          exp: 0,
+          expToLevel: 10,
+          points: 0,
+          totalSlashes: 0,
+          qualityShards: 0
+        },
+        permanentBuffs: {
+          trainingMark: 0,
+          masteryProof: 0,
+          undyingBlade: 0,
+          polishingSecret: 0,
+          sharpeningLevel: 0,
+          aftershockMark: 0,
+          qualityCostReductionLevel: 0,
+          fastAuto: false,
+          ultraFastAuto: false,
+          quadWieldUnlocked: false,
+          keepQualityOnRockAdvance: false
+        },
+        history: {
+          totalSlashes: 0,
+          totalExpGained: 0,
+          totalRebirths: 0,
+          totalQualityUps: 0,
+          maxQualityReached: 0,
+          maxRockStage: 1
+        },
+        logs: [],
+        worldStar: 0,
+        screen: "title",
+        dualWieldUnlocked: false,
+        dualWieldOn: false,
+        quadWieldOn: false,
+        autoUnlocked: false,
+        autoOn: false,
+        rescueMode: false,
+        lastFlavorId: "",
+        flavorUsedIds: [],
+        rockHalfFlavorChecked: false,
+        autoLoopEnabled: true,
+        activeEvent: null,
+        lastEventTriggerSlash: 0,
+        unlockFlags: {
+          eventBoost3: false,
+          comboEvent5: false,
+          qualityShard7: false,
+          rockTrait15: false,
+          shardBoost20: false,
+          shardCost23: false,
+          traitChoice28: false
+        },
+        isInputLocked: false,
+        isRebirth: false,
+        gameCleared: false,
+        debugMode: false,
+        clearLogged: false,
+        leftTab: "log",
+        effectFlags: {
+          breakPlaying: false,
+          clearPlaying: false,
+          qualityPlaying: false,
+          rockAdvancePlaying: false
+        },
+        lastDamageBreakdown: {
+          base: 1,
+          additional: 0,
+          total: 1
+        }
+      };
+    }
+
+    let state = createInitialState();
+    let nextRockTimer = null;
+    let autoTimerId = null;
+    let autoLoopActive = false;
+    let autoLogCount = 0;
+    let autoLogTimerId = null;
+    let rescueLogCount = 0;
+    let rescueLogTimerId = null;
+    let pendingRockTraitSelection = null;
+
+    const els = {
+      titleScreen: document.getElementById("titleScreen"),
+      startGameBtn: document.getElementById("startGameBtn"),
+      mainContainer: document.getElementById("mainContainer"),
+      rockHpText: document.getElementById("rockHpText"),
+      rockCutText: document.getElementById("rockCutText"),
+      rockStageText: document.getElementById("rockStageText"),
+      rockBonusText: document.getElementById("rockBonusText"),
+      rockTraitText: document.getElementById("rockTraitText"),
+      wieldStatusText: document.getElementById("wieldStatusText"),
+      activeEventText: document.getElementById("activeEventText"),
+      autoToggleBtn: document.getElementById("autoToggleBtn"),
+      rockBarContainer: document.getElementById("rockBarContainer"),
+      rockBar: document.getElementById("rockBar"),
+      log: document.getElementById("log"),
+      attackBtn: document.getElementById("attackBtn"),
+      attackBtnLabel: document.querySelector("#attackBtn span"),
+      clearMessage: document.getElementById("clearMessage"),
+      nextRockBtn: document.getElementById("nextRockBtn"),
+      durabilityFrame: document.getElementById("durabilityFrame"),
+      durabilityGauge: document.getElementById("durabilityGauge"),
+      swordDurText: document.getElementById("swordDurText"),
+      sharpnessText: document.getElementById("sharpnessText"),
+      expText: document.getElementById("expText"),
+      slashCountText: document.getElementById("slashCountText"),
+      levelText: document.getElementById("levelText"),
+      pointText: document.getElementById("pointText"),
+      qualityShardText: document.getElementById("qualityShardText"),
+      swordNameText: document.getElementById("swordNameText"),
+      tabLogBtn: document.getElementById("tabLogBtn"),
+      tabHistoryBtn: document.getElementById("tabHistoryBtn"),
+      historyPanel: document.getElementById("historyPanel"),
+      histTotalSlashes: document.getElementById("histTotalSlashes"),
+      histTotalExp: document.getElementById("histTotalExp"),
+      histTotalRebirth: document.getElementById("histTotalRebirth"),
+      histTotalQualityUp: document.getElementById("histTotalQualityUp"),
+      histMaxQuality: document.getElementById("histMaxQuality"),
+      histMaxRockStage: document.getElementById("histMaxRockStage"),
+      histTitle: document.getElementById("histTitle"),
+      blackout: document.getElementById("blackout"),
+      bigSwordName: document.getElementById("bigSwordName"),
+      devToggleBtn: document.getElementById("devToggleBtn"),
+      rescueToggleBtn: document.getElementById("rescueToggleBtn"),
+      rescueIndicator: document.getElementById("rescueIndicator"),
+      devPanel: document.getElementById("devPanel"),
+      devXpFormula: document.getElementById("devXpFormula"),
+      devQualityCostCalc: document.getElementById("devQualityCostCalc"),
+      devDamageBreakdown: document.getElementById("devDamageBreakdown"),
+      devEventMeta: document.getElementById("devEventMeta"),
+      devEventState: document.getElementById("devEventState"),
+      devQualityGainMult: document.getElementById("devQualityGainMult"),
+      devStateJson: document.getElementById("devStateJson"),
+      debugPanel: document.getElementById("debugPanel"),
+      debugQualityStage: document.getElementById("debugQualityStage"),
+      debugRequiredXp: document.getElementById("debugRequiredXp"),
+      debugQualityCost: document.getElementById("debugQualityCost"),
+      resetBtn: document.getElementById("resetBtn"),
+      rebirthModal: document.getElementById("rebirthModal"),
+      rebirthResumeTop: document.getElementById("rebirthResumeTop"),
+      traitSelectModal: document.getElementById("traitSelectModal"),
+      traitSelectStageText: document.getElementById("traitSelectStageText"),
+      traitSelectList: document.getElementById("traitSelectList"),
+      ultimateClearModal: document.getElementById("ultimateClearModal"),
+      ultimateContinueBtn: document.getElementById("ultimateContinueBtn"),
+      ultimateHomeBtn: document.getElementById("ultimateHomeBtn"),
+      modalSwordInfo: document.getElementById("modalSwordInfo"),
+      modalPoints: document.getElementById("modalPoints"),
+      modalShards: document.getElementById("modalShards"),
+      modalQualityCost: document.getElementById("modalQualityCost"),
+      buffShopWrap: document.getElementById("buffShopWrap"),
+      buffShopList: document.getElementById("buffShopList"),
+      allocSharp: document.getElementById("allocSharp"),
+      allocDurability: document.getElementById("allocDurability"),
+      allocQuality: document.getElementById("allocQuality"),
+      addSharpnessBtn: document.getElementById("addSharpnessBtn"),
+      addSharpness10Btn: document.getElementById("addSharpness10Btn"),
+      addSharpness100Btn: document.getElementById("addSharpness100Btn"),
+      addSharpnessMaxBtn: document.getElementById("addSharpnessMaxBtn"),
+      addDurabilityBtn: document.getElementById("addDurabilityBtn"),
+      addDurability10Btn: document.getElementById("addDurability10Btn"),
+      addDurability100Btn: document.getElementById("addDurability100Btn"),
+      addDurabilityMaxBtn: document.getElementById("addDurabilityMaxBtn"),
+      upgradeQualityBtn: document.getElementById("upgradeQualityBtn"),
+      unlockAutoBtn: document.getElementById("unlockAutoBtn"),
+      unlockDualWieldBtn: document.getElementById("unlockDualWieldBtn"),
+      toggleDualWieldBtn: document.getElementById("toggleDualWieldBtn"),
+      rebirthResume: document.getElementById("rebirthResume")
+    };
+
+    function currentSwordName() {
+      const qualityName = QUALITY_NAMES[state.sword.quality] || QUALITY_NAMES[QUALITY_NAMES.length - 1];
+      return `${qualityName}ソード`;
+    }
+
+    function swordNameByQualityIndex(qualityIndex) {
+      const qualityName = QUALITY_NAMES[clamp(qualityIndex, 0, QUALITY_NAMES.length - 1)] || QUALITY_NAMES[0];
+      return `${qualityName}ソード`;
+    }
+
+    function titleByMaxQuality(qualityIndex) {
+      const TITLES = ["剣士", "剣客", "剣豪", "剣聖", "剣王", "剣神", "天剣", "覇剣", "聖剣王", "極剣王", "超剣神", "終極剣神"];
+      return TITLES[clamp(qualityIndex, 0, TITLES.length - 1)] || TITLES[0];
+    }
+
+    function bladeThemeByQuality(qualityIndex) {
+      const THEMES = [
+        { start: "#e6e6e6", mid: "#cfcfcf", end: "#bdbdbd", tip: "#cfcfcf", glow: "rgba(255,255,255,0.10)" }, // wood
+        { start: "#e5edf7", mid: "#c8d2df", end: "#a8b5c6", tip: "#c8d2df", glow: "rgba(180,210,255,0.12)" }, // iron
+        { start: "#ffe8a3", mid: "#f3ca58", end: "#c7982f", tip: "#f3ca58", glow: "rgba(255,220,120,0.18)" }, // gold
+        { start: "#ecf8ff", mid: "#b9ebff", end: "#7cd3ff", tip: "#b9ebff", glow: "rgba(125,220,255,0.2)" },  // dia
+        { start: "#f4f4f6", mid: "#d8d9de", end: "#b5b7c0", tip: "#d8d9de", glow: "rgba(220,220,230,0.2)" },   // platinum
+        { start: "#d8f6f4", mid: "#9de4de", end: "#59bfb5", tip: "#9de4de", glow: "rgba(120,240,220,0.22)" },  // mythril
+        { start: "#e8f2ff", mid: "#bdd6ff", end: "#7fa9ff", tip: "#bdd6ff", glow: "rgba(130,170,255,0.25)" },  // orichalcum
+        { start: "#f2f5fa", mid: "#c8d0df", end: "#8b98b1", tip: "#c8d0df", glow: "rgba(170,190,230,0.25)" },  // adamantite
+        { start: "#fff7d8", mid: "#ffd96a", end: "#f4a422", tip: "#ffd96a", glow: "rgba(255,210,90,0.35)" },   // super
+        { start: "#f6ecff", mid: "#ddb8ff", end: "#b278ff", tip: "#ddb8ff", glow: "rgba(195,140,255,0.4)" },   // hyper
+        { start: "#fff0f0", mid: "#ffb6d8", end: "#ff78a8", tip: "#ffb6d8", glow: "rgba(255,140,190,0.45)" },  // ultra
+        { start: "#ffffff", mid: "#d7f7ff", end: "#98e8ff", tip: "#d7f7ff", glow: "rgba(180,255,255,0.65)" }   // ultimate
+      ];
+      return THEMES[clamp(qualityIndex, 0, THEMES.length - 1)];
+    }
+
+    function clamp(v, min, max) {
+      return Math.max(min, Math.min(max, v));
+    }
+
+    function clampStat(v) {
+      if (!Number.isFinite(v)) return MAX_VALUE;
+      return clamp(v, 0, MAX_VALUE);
+    }
+
+    function formatNumber(v) {
+      const n = Math.floor(clampStat(v));
+      if (n >= 1e9) return `${(n / 1e9).toFixed(1)}B`;
+      if (n >= 1e6) return `${(n / 1e6).toFixed(1)}M`;
+      if (n >= 1e3) return `${(n / 1e3).toFixed(1)}K`;
+      return String(n);
+    }
+
+    function pushLogLine(message) {
+      state.logs.push(`[${new Date().toLocaleTimeString("ja-JP")}] ${message}`);
+      while (state.logs.length > 50) {
+        state.logs.shift();
+      }
+    }
+
+    function addLog(message) {
+      if (state.rescueMode && !isRescueImportantLog(message)) {
+        return;
+      }
+      pushLogLine(message);
+    }
+
+    function addFlavorLog(message) {
+      // 岩フレーバーは救済中でも表示許可する
+      pushLogLine(message);
+    }
+
+    function isRescueImportantLog(message) {
+      const importantWords = [
+        "――剣が折れた。",
+        "剣生へ。",
+        "剣質アップ成立",
+        "次の岩は『",
+        "剣は、次の岩を見定めた。",
+        "岩は、より強く変質している。",
+        "岩が、二つの性質を宿している……。",
+        "――凝縮。",
+        "――アルティメット。終点に辿り着いた。",
+        "岩を断った。",
+        "世界が、重なった。",
+        "始まりは、もう一度。",
+        "（救済）"
+      ];
+      return importantWords.some((word) => String(message).includes(word));
+    }
+
+    function currentFlavorPool() {
+      if ((state.worldStar || 0) >= 1) return ROCK_FLAVOR_POOLS.star;
+      if (state.rock.rockStage >= 20) return ROCK_FLAVOR_POOLS.endgame;
+      return ROCK_FLAVOR_POOLS.normal;
+    }
+
+    function tryRockFlavor(options = {}) {
+      const { force = false } = options;
+      if (!force && Math.random() >= ROCK_FLAVOR_HALF_TRIGGER_RATE) return;
+      const pool = currentFlavorPool();
+      if (!Array.isArray(state.flavorUsedIds)) {
+        state.flavorUsedIds = [];
+      }
+      const available = pool.filter((entry) => !state.flavorUsedIds.includes(entry.id));
+      if (available.length === 0) return;
+      const picked = available[Math.floor(Math.random() * available.length)];
+      state.lastFlavorId = picked.id;
+      state.flavorUsedIds.push(picked.id);
+      addFlavorLog(picked.text);
+    }
+
+    function flushAutoLog() {
+      if (autoLogCount > 0) {
+        addLog(`（AUTO）斬撃×${formatNumber(autoLogCount)}`);
+        autoLogCount = 0;
+      }
+      if (autoLogTimerId) {
+        clearTimeout(autoLogTimerId);
+        autoLogTimerId = null;
+      }
+    }
+
+    function flushRescueLog() {
+      if (rescueLogCount > 0) {
+        addLog("（救済）斬撃継続中…");
+        rescueLogCount = 0;
+      }
+      if (rescueLogTimerId) {
+        clearTimeout(rescueLogTimerId);
+        rescueLogTimerId = null;
+      }
+    }
+
+    function pushAutoLog() {
+      autoLogCount += 1;
+      if (!autoLogTimerId) {
+        autoLogTimerId = setTimeout(() => {
+          flushAutoLog();
+          render();
+        }, 500);
+      }
+    }
+
+    function pushRescueLog() {
+      rescueLogCount += 1;
+      if (!rescueLogTimerId) {
+        rescueLogTimerId = setTimeout(() => {
+          flushRescueLog();
+          render();
+        }, 1000);
+      }
+    }
+
+    function isAutoAvailable() {
+      return state.rock.rockStage >= 25 || state.autoUnlocked;
+    }
+
+    function getAutoIntervalMs() {
+      if (state.rescueMode) return AUTO_RESCUE_INTERVAL_MS;
+      if (state.permanentBuffs.ultraFastAuto) return AUTO_ULTRA_INTERVAL_MS;
+      if (state.permanentBuffs.fastAuto) return AUTO_FAST_INTERVAL_MS;
+      return AUTO_BASE_INTERVAL_MS;
+    }
+
+    function stopAutoLoop() {
+      state.autoOn = false;
+      autoLoopActive = false;
+      if (autoTimerId) {
+        clearTimeout(autoTimerId);
+        autoTimerId = null;
+      }
+      flushAutoLog();
+      flushRescueLog();
+    }
+
+    function canAutoRun() {
+      return Boolean(
+        state.autoLoopEnabled &&
+        state.screen === "game" &&
+        isAutoAvailable() &&
+        state.autoOn &&
+        !state.isRebirth &&
+        !state.isInputLocked &&
+        !state.gameCleared &&
+        !state.effectFlags.breakPlaying &&
+        !state.effectFlags.clearPlaying &&
+        !state.effectFlags.qualityPlaying &&
+        !state.effectFlags.rockAdvancePlaying
+      );
+    }
+
+    function scheduleAutoTick() {
+      if (!autoLoopActive) return;
+      const interval = getAutoIntervalMs();
+      autoTimerId = setTimeout(() => {
+        if (!canAutoRun()) {
+          stopAutoLoop();
+          render();
+          return;
+        }
+        attack("auto");
+        if (canAutoRun()) {
+          scheduleAutoTick();
+        } else {
+          stopAutoLoop();
+          render();
+        }
+      }, interval);
+    }
+
+    function ensureAutoLoopState() {
+      if (!canAutoRun()) {
+        if (autoLoopActive || state.autoOn) {
+          stopAutoLoop();
+          render();
+        }
+        return;
+      }
+      if (autoLoopActive) return;
+      autoLoopActive = true;
+      scheduleAutoTick();
+    }
+
+    let inputLockCount = 0;
+    let inputLockGeneration = 0;
+
+    function restartAnimationClass(element, className) {
+      element.classList.remove(className);
+      void element.offsetWidth;
+      element.classList.add(className);
+    }
+
+    function lockInputFor(ms, onDone) {
+      const gen = inputLockGeneration;
+      inputLockCount += 1;
+      stopAutoLoop();
+      state.isInputLocked = true;
+      render();
+      setTimeout(() => {
+        if (gen !== inputLockGeneration) return;
+        inputLockCount = Math.max(0, inputLockCount - 1);
+        if (inputLockCount === 0) {
+          state.isInputLocked = false;
+        }
+        if (typeof onDone === "function") onDone();
+        render();
+      }, ms);
+    }
+
+    function playSlash(isFinal = false) {
+      restartAnimationClass(els.attackBtn, "blade-flash");
+      setTimeout(() => {
+        els.attackBtn.classList.remove("blade-flash");
+      }, isFinal ? 120 : 90);
+    }
+
+    function playBreak() {
+      if (state.effectFlags.breakPlaying) return;
+      stopAutoLoop();
+      state.effectFlags.breakPlaying = true;
+      els.durabilityFrame.classList.add("breaking");
+      els.attackBtn.classList.add("sword-break");
+      lockInputFor(500, () => {
+        els.durabilityFrame.classList.remove("breaking");
+        els.attackBtn.classList.remove("sword-break");
+        state.effectFlags.breakPlaying = false;
+        openRebirth();
+      });
+    }
+
+    function playQualityUp(newName) {
+      if (state.effectFlags.qualityPlaying) return;
+      state.effectFlags.qualityPlaying = true;
+      els.bigSwordName.textContent = newName;
+      restartAnimationClass(els.blackout, "show");
+      restartAnimationClass(els.bigSwordName, "show");
+      lockInputFor(1000, () => {
+        els.blackout.classList.remove("show");
+        els.bigSwordName.classList.remove("show");
+        state.effectFlags.qualityPlaying = false;
+      });
+    }
+
+    function playClear() {
+      if (state.effectFlags.clearPlaying) return;
+      state.effectFlags.clearPlaying = true;
+      playSlash(true);
+      els.attackBtn.classList.add("final-slash");
+      els.rockBarContainer.classList.add("crumble");
+      els.rockHpText.classList.add("fade-out");
+      els.rockCutText.style.display = "block";
+      setTimeout(() => {
+        els.attackBtn.classList.remove("final-slash");
+        els.rockBarContainer.classList.remove("crumble");
+        els.rockHpText.classList.remove("fade-out");
+        els.rockCutText.style.display = "none";
+        state.effectFlags.clearPlaying = false;
+      }, 800);
+    }
+
+    function qualityStageNumber() {
+      return state.sword.quality + 1;
+    }
+
+    function hasEventType(type) {
+      return Boolean(
+        state.activeEvent &&
+        Array.isArray(state.activeEvent.types) &&
+        state.activeEvent.types.includes(type)
+      );
+    }
+
+    function eventTypeLabel(type) {
+      if (type === "xp") return "ムキムキ";
+      if (type === "damage") return "キレキレ";
+      if (type === "durability") return "カチカチ";
+      return "不明";
+    }
+
+    function eventLabels(types) {
+      return types.map(eventTypeLabel).join("＋");
+    }
+
+    function getBuffLevel(buffKey) {
+      return Math.max(0, Math.floor(state.permanentBuffs[buffKey] || 0));
+    }
+
+    function getBuffMaxLevel(buffKey) {
+      const base = BUFF_DEFS[buffKey]?.maxLevel || 0;
+      const extra = Math.max(0, Math.floor(state.rock.rockStage) - 15);
+      const starBonus = Math.max(0, Math.floor(state.worldStar || 0)) * 5;
+      return base + extra + starBonus;
+    }
+
+    function getBuffCost(buffKey) {
+      const lv = getBuffLevel(buffKey);
+      const maxLv = getBuffMaxLevel(buffKey);
+      if (lv >= maxLv) return Infinity;
+      if (buffKey === "trainingMark") return (lv + 1) * 15;
+      if (buffKey === "masteryProof") return (lv + 1) * 30;
+      if (buffKey === "undyingBlade") return (lv + 1) * 35;
+      if (buffKey === "polishingSecret") return (lv + 1) * 18;
+      if (buffKey === "sharpeningLevel") return 10 * (lv + 1);
+      if (buffKey === "aftershockMark") return (lv + 1) * 25;
+      if (buffKey === "qualityCostReductionLevel") {
+        if (state.rock.rockStage < 17) return Infinity;
+        const table = [50, 120, 250, 500];
+        return table[Math.min(lv, table.length - 1)];
+      }
+      return Infinity;
+    }
+
+    function createSingleTrait(type, level = 1) {
+      return {
+        traits: [{ type, level }]
+      };
+    }
+
+    function normalizeRockTraitConfig(raw) {
+      if (typeof raw === "string") {
+        const legacyType = ROCK_TRAITS[raw] ? raw : "normal";
+        return createSingleTrait(legacyType, 1);
+      }
+      if (!raw || typeof raw !== "object" || !Array.isArray(raw.traits) || raw.traits.length === 0) {
+        return createSingleTrait("normal", 1);
+      }
+      const normalizedTraits = raw.traits.map((entry) => {
+        const type = ROCK_TRAITS[entry?.type] ? entry.type : "normal";
+        const level = type !== "normal" && Number(entry?.level) >= 2 ? 2 : 1;
+        return { type, level };
+      }).slice(0, 2);
+      return { traits: normalizedTraits };
+    }
+
+    function getTraitDef(type, level) {
+      if (level >= 2 && ROCK_TRAITS_LV2[type]) return ROCK_TRAITS_LV2[type];
+      return ROCK_TRAITS[type] || ROCK_TRAITS.normal;
+    }
+
+    function getCurrentRockTrait() {
+      const config = normalizeRockTraitConfig(state.currentRockTrait);
+      let hpMultiplier = 1;
+      let xpMultiplier = 1;
+      let damageMultiplier = 1;
+      let eventInterval = 100;
+      const names = [];
+      const descs = [];
+      for (const entry of config.traits) {
+        const def = getTraitDef(entry.type, entry.level);
+        hpMultiplier *= def.hpMultiplier;
+        xpMultiplier *= def.xpMultiplier;
+        damageMultiplier *= def.damageMultiplier;
+        eventInterval = Math.min(eventInterval, def.eventInterval);
+        names.push(def.name);
+        descs.push(def.description);
+      }
+      return {
+        config,
+        name: names.join("＋"),
+        description: descs.join(" / "),
+        hpMultiplier,
+        xpMultiplier,
+        damageMultiplier,
+        eventInterval,
+        hasStar: config.traits.some((t) => t.level >= 2),
+        isCombo: config.traits.length >= 2
+      };
+    }
+
+    function traitPoolByStage(stage) {
+      if (stage < 15) return ["normal"];
+      return stage >= 20
+        ? ["normal", "glitter", "resonance", "dark", "gold"]
+        : ["normal", "glitter", "resonance", "dark"];
+    }
+
+    function rollTraitLevel(stage, type) {
+      if (stage < 26) return 1;
+      if (type === "normal") return 1;
+      return Math.random() < 0.3 ? 2 : 1;
+    }
+
+    function rollSingleTraitConfig(stage) {
+      const pool = traitPoolByStage(stage);
+      const type = pool[Math.floor(Math.random() * pool.length)];
+      const level = rollTraitLevel(stage, type);
+      return createSingleTrait(type, level);
+    }
+
+    function rollComboTraitConfig(stage) {
+      const pool = traitPoolByStage(stage).filter((type) => type !== "normal");
+      if (pool.length < 2) {
+        return rollSingleTraitConfig(stage);
+      }
+      let first = pool[Math.floor(Math.random() * pool.length)];
+      let second = pool[Math.floor(Math.random() * pool.length)];
+      let guard = 0;
+      while ((first === second || ((first === "gold" && second === "glitter") || (first === "glitter" && second === "gold"))) && guard < 20) {
+        first = pool[Math.floor(Math.random() * pool.length)];
+        second = pool[Math.floor(Math.random() * pool.length)];
+        guard += 1;
+      }
+      return {
+        traits: [
+          { type: first, level: rollTraitLevel(stage, first) },
+          { type: second, level: rollTraitLevel(stage, second) }
+        ]
+      };
+    }
+
+    function shardMultiplierByRockStage(stage) {
+      if (stage < 20) return 1;
+      return (1 + 0.10 * (stage - 20)) * rockBonusMultiplier();
+    }
+
+    function shardCostMultiplierByRockStage(stage) {
+      const base = stage < 23 ? 1 : Math.max(0.5, 1 - 0.05 * (stage - 23));
+      return Math.max(0.05, base * (1 / rockBonusMultiplier()));
+    }
+
+    function applyShardCostMultiplier(baseCost) {
+      if (!Number.isFinite(baseCost)) return Infinity;
+      const mult = shardCostMultiplierByRockStage(state.rock.rockStage);
+      return Math.max(1, Math.ceil(baseCost * mult));
+    }
+
+    function qualityGainMultiplierByRockStage(stage) {
+      const s = Math.max(1, Math.floor(stage));
+      return (1 + 0.10 * (s - 1)) * rockBonusMultiplier();
+    }
+
+    function starPointGainMultiplier() {
+      return (state.worldStar || 0) >= 3 ? 2 : 1;
+    }
+
+    function starShardGainMultiplier() {
+      return (state.worldStar || 0) >= 4 ? 2 : 1;
+    }
+
+    function rockSharpnessBaseByStage(stage) {
+      const s = Math.max(1, Math.floor(stage));
+      return Math.floor((s - 1) * 0.8);
+    }
+
+    function rockSharpnessBonusByStage(stage) {
+      const base = rockSharpnessBaseByStage(stage);
+      const sharpeningLv = getBuffLevel("sharpeningLevel");
+      return Math.floor(base * (1 + 0.15 * sharpeningLv));
+    }
+
+    function rockBonusMultiplier() {
+      return 1 + 0.20 * Math.max(0, Math.floor(state.worldStar || 0));
+    }
+
+    function applyQualityPointGainMultiplier(basePoints) {
+      const base = Math.max(0, basePoints);
+      const mult = qualityGainMultiplierByRockStage(state.rock.rockStage) * starPointGainMultiplier();
+      return Math.max(1, Math.floor(base * mult));
+    }
+
+    function currentWieldState() {
+      if (state.quadWieldOn && state.permanentBuffs.quadWieldUnlocked) {
+        return { name: "四刀", damageMult: 2.5, durabilityMult: 3.0 };
+      }
+      if (state.dualWieldOn && state.dualWieldUnlocked) {
+        return { name: "二刀", damageMult: 1.5, durabilityMult: 1.5 };
+      }
+      return { name: "通常", damageMult: 1.0, durabilityMult: 1.0 };
+    }
+
+    function unlockDualWield() {
+      if (!state.isRebirth) return;
+      if (state.dualWieldUnlocked) return;
+      if (state.sword.points < 30) return;
+      state.sword.points = clampStat(state.sword.points - 30);
+      state.dualWieldUnlocked = true;
+      state.dualWieldOn = false;
+      addLog("流派『二刀流』を会得した。");
+      saveGame();
+      render();
+    }
+
+    function toggleDualWield() {
+      if (!state.dualWieldUnlocked) return;
+      state.dualWieldOn = !state.dualWieldOn;
+      if (state.dualWieldOn) {
+        state.quadWieldOn = false;
+      }
+      addLog(state.dualWieldOn ? "二刀流を構えた。" : "二刀流を解いた。");
+      saveGame();
+      render();
+    }
+
+    function toggleQuadWield() {
+      if (!state.permanentBuffs.quadWieldUnlocked) return;
+      state.quadWieldOn = !state.quadWieldOn;
+      if (state.quadWieldOn) {
+        state.dualWieldOn = false;
+      }
+      addLog(state.quadWieldOn ? "四刀流を構えた。" : "四刀流を解いた。");
+      saveGame();
+      render();
+    }
+
+    function checkRockUnlockLogs() {
+      if (state.rock.rockStage >= 3 && !state.unlockFlags.eventBoost3) {
+        addLog("岩が応えた。");
+        addLog("イベントの力が増している。");
+        state.unlockFlags.eventBoost3 = true;
+      }
+      if (state.rock.rockStage >= 5 && !state.unlockFlags.comboEvent5) {
+        addLog("岩が脈動した。");
+        addLog("複合イベントが解禁された。");
+        state.unlockFlags.comboEvent5 = true;
+      }
+      if (state.rock.rockStage >= 7 && !state.unlockFlags.qualityShard7) {
+        addLog("岩の欠片が、新たな力を刻めるようになった。");
+        state.unlockFlags.qualityShard7 = true;
+      }
+      if (state.rock.rockStage >= 15 && !state.unlockFlags.rockTrait15) {
+        addLog("岩は、性質を持ち始めた。");
+        state.unlockFlags.rockTrait15 = true;
+      }
+      if (state.rock.rockStage >= 20 && !state.unlockFlags.shardBoost20) {
+        addLog("岩は欠片を多く吐き出すようになった。");
+        state.unlockFlags.shardBoost20 = true;
+      }
+      if (state.rock.rockStage >= 23 && !state.unlockFlags.shardCost23) {
+        addLog("岩は、欠片を要求しなくなり始めた。");
+        state.unlockFlags.shardCost23 = true;
+      }
+      if (state.rock.rockStage >= 28 && !state.unlockFlags.traitChoice28) {
+        addLog("選べる道が、増えた。");
+        state.unlockFlags.traitChoice28 = true;
+      }
+    }
+
+    function randomTraitOptions(stage) {
+      const optionCount = stage >= 28 ? 3 : 2;
+      const options = [];
+      for (let i = 0; i < optionCount; i += 1) {
+        options.push(rollSingleTraitConfig(stage));
+      }
+      if (stage >= 27 && Math.random() < 0.25) {
+        const idx = Math.floor(Math.random() * optionCount);
+        options[idx] = rollComboTraitConfig(stage);
+      }
+      return options;
+    }
+
+    function openTraitSelection(nextStage) {
+      pendingRockTraitSelection = {
+        nextStage,
+        options: randomTraitOptions(nextStage)
+      };
+      state.isInputLocked = true;
+      if (!els.traitSelectModal.open) {
+        els.traitSelectModal.showModal();
+      }
+      render();
+    }
+
+    function confirmTraitSelection(optionIndex) {
+      if (!pendingRockTraitSelection) return;
+      if (!Number.isInteger(optionIndex)) return;
+      if (optionIndex < 0 || optionIndex >= pendingRockTraitSelection.options.length) return;
+      const nextStage = pendingRockTraitSelection.nextStage;
+      const selected = normalizeRockTraitConfig(pendingRockTraitSelection.options[optionIndex]);
+      const selectedInfo = (() => {
+        const prev = state.currentRockTrait;
+        state.currentRockTrait = selected;
+        const info = getCurrentRockTrait();
+        state.currentRockTrait = prev;
+        return info;
+      })();
+      pendingRockTraitSelection = null;
+      if (els.traitSelectModal.open) {
+        els.traitSelectModal.close();
+      }
+      state.isInputLocked = false;
+      addLog("剣は、次の岩を見定めた。");
+      if (selectedInfo.hasStar) {
+        addLog("岩は、より強く変質している。");
+      }
+      if (selectedInfo.isCombo) {
+        addLog("岩が、二つの性質を宿している……。");
+      }
+      finalizeAdvanceToNextRock(nextStage, selected);
+    }
+
+    function qualityShardGainByRockStage(stage) {
+      if (stage < 7) return 0;
+      const base = 1;
+      const multiplier = shardMultiplierByRockStage(stage) * starShardGainMultiplier();
+      return Math.max(1, Math.floor(base * multiplier));
+    }
+
+    function triggerEvent() {
+      const slash = state.sword.totalSlashes;
+      if (state.lastEventTriggerSlash === slash) return;
+
+      if (state.activeEvent) {
+        addLog("イベント効果が切り替わった。");
+      }
+
+      const comboUnlocked = state.rock.rockStage >= 5;
+      const useCombo = comboUnlocked && Math.random() < 0.2;
+      const durationBonus = getBuffLevel("aftershockMark") * 2;
+
+      if (useCombo) {
+        const comboPool = [
+          ["xp", "damage"],
+          ["damage", "durability"],
+          ["xp", "durability"]
+        ];
+        const types = comboPool[Math.floor(Math.random() * comboPool.length)];
+        state.activeEvent = {
+          types,
+          remainingClicks: 15 + durationBonus,
+          isCombo: true
+        };
+        addLog("岩が異変を起こした…");
+        addLog(`力が重なっている。（残り${formatNumber(15 + durationBonus)}回）`);
+      } else {
+        const pool = ["xp", "damage", "durability"];
+        const type = pool[Math.floor(Math.random() * pool.length)];
+        let duration = 20;
+        if (state.rock.rockStage >= 3 && type === "durability") {
+          duration = 30;
+        }
+        duration += durationBonus;
+        state.activeEvent = {
+          types: [type],
+          remainingClicks: duration,
+          isCombo: false
+        };
+
+        if (type === "xp") {
+          addLog("💪 ムキムキイベント発生！");
+          addLog(`剣験値が増加している…！（${duration}回）`);
+        } else if (type === "damage") {
+          addLog("✨ キレキレイベント発生！");
+          addLog(`剣の切れ味が冴え渡る！（${duration}回）`);
+        } else {
+          addLog("🛡 カチカチイベント発生！");
+          addLog(`剣が異様に硬い…！（${duration}回）`);
+        }
+      }
+      state.lastEventTriggerSlash = slash;
+    }
+
+    function consumeActiveEventClick() {
+      if (!state.activeEvent) return;
+      state.activeEvent.remainingClicks -= 1;
+      if (state.activeEvent.remainingClicks <= 0) {
+        addLog(`${eventLabels(state.activeEvent.types || [])}イベント終了。`);
+        state.activeEvent = null;
+      }
+    }
+
+    function getRockXpMultiplier(stage) {
+      const s = Math.max(1, Math.floor(stage));
+      return 1 + 0.25 * (s - 1);
+    }
+
+    function getRockLevelPointGain(stage) {
+      const s = Math.max(1, Math.floor(stage));
+      return 1 + Math.floor((s - 1) / 2);
+    }
+
+    function refreshRockBonus() {
+      state.rock.xpMultiplier = getRockXpMultiplier(state.rock.rockStage);
+      state.rock.levelPointGain = getRockLevelPointGain(state.rock.rockStage);
+    }
+
+    function qualityMultiplier(tier) {
+      const t = Math.max(1, Math.floor(tier));
+      const d = t - 1;
+      return 1 + 0.05 * d + 0.03 * (d ** 2);
+    }
+
+    function baseXP(level, tier) {
+      const lv = Math.max(1, Math.floor(level));
+      const t = Math.max(1, Math.floor(tier));
+      const d = t - 1;
+      const start = 5 + d * 0.6;
+      const growth = 1.11 + d * 0.006 + (d ** 2) * 0.0015;
+      return Math.ceil(start * (growth ** (lv - 1)));
+    }
+
+    function isEarlyLevelXpBoostActive(level) {
+      return Boolean(
+        state.sword.quality > 0 &&
+        level >= 1 &&
+        level <= 10
+      );
+    }
+
+    function baseSharpnessByQuality(qualityIndex) {
+      const n = qualityIndex + 1;
+      return 1 + Math.floor(((n - 1) ** 2) / 2);
+    }
+
+    function baseDurabilityByQuality(qualityIndex) {
+      const n = qualityIndex + 1;
+      return 50 + (n - 1) * 25;
+    }
+
+    function expRequiredForLevel(level) {
+      const tier = qualityStageNumber();
+      const raw = baseXP(level, tier) * qualityMultiplier(tier);
+      const boosted = isEarlyLevelXpBoostActive(level) ? raw * 0.85 : raw;
+      return Math.ceil(boosted);
+    }
+
+    function baseQualityUpgradeCost() {
+      if (state.sword.quality >= QUALITY_NAMES.length - 1) return Infinity;
+      if (state.sword.quality === 0) return 50;
+      return Math.floor(100 * (3 ** state.sword.quality));
+    }
+
+    function qualityUpgradeReductionRate() {
+      const lv = getBuffLevel("qualityCostReductionLevel");
+      return Math.min(0.15 * lv, 0.6);
+    }
+
+    function nextQualityUpgradeCost() {
+      const baseCost = baseQualityUpgradeCost();
+      if (!Number.isFinite(baseCost)) return Infinity;
+      const reduced = Math.ceil(baseCost * (1 - qualityUpgradeReductionRate()));
+      const floorCost = Math.ceil(baseCost * 0.4);
+      return Math.max(floorCost, reduced);
+    }
+
+    function calcRockMaxHp(stage) {
+      const base = 5000;
+      const growth = base * (1.38 ** (stage - 1));
+      return Math.floor(clampStat(growth + stage * 250));
+    }
+
+    function calcClearReward(stage) {
+      return Math.max(1, Math.floor(stage * 1.5 + 2));
+    }
+
+    function refreshSwordStats() {
+      refreshRockBonus();
+      const sharpBoost = getBuffLevel("polishingSecret");
+      const rockSharpnessBonus = rockSharpnessBonusByStage(state.rock.rockStage);
+      const durabilityRateBoost = getBuffLevel("undyingBlade") * 0.2;
+      state.sword.baseSharpness = clampStat(baseSharpnessByQuality(state.sword.quality) + sharpBoost + rockSharpnessBonus);
+      state.sword.baseDurability = clampStat(Math.floor(baseDurabilityByQuality(state.sword.quality) * (1 + durabilityRateBoost)));
+      state.sword.sharpness = clampStat(state.sword.baseSharpness + state.sword.allocSharpness);
+      state.sword.maxDurability = clampStat(state.sword.baseDurability + state.sword.allocDurability);
+      state.sword.durability = clamp(state.sword.durability, 0, state.sword.maxDurability);
+      state.sword.expToLevel = expRequiredForLevel(state.sword.level);
+      state.rock.maxHp = clampStat(state.rock.maxHp);
+      state.rock.hp = clamp(state.rock.hp, 0, state.rock.maxHp);
+      state.sword.points = clampStat(state.sword.points);
+      state.sword.qualityShards = clampStat(state.sword.qualityShards);
+      state.sword.exp = clampStat(state.sword.exp);
+      state.sword.totalSlashes = clampStat(state.sword.totalSlashes);
+      state.history.totalSlashes = clampStat(state.history.totalSlashes);
+      state.history.totalExpGained = clampStat(state.history.totalExpGained);
+      state.history.totalRebirths = clampStat(state.history.totalRebirths);
+      state.history.totalQualityUps = clampStat(state.history.totalQualityUps);
+      state.history.maxQualityReached = clamp(Math.floor(state.history.maxQualityReached), 0, QUALITY_NAMES.length - 1);
+      state.history.maxRockStage = Math.max(1, Math.floor(state.history.maxRockStage));
+      state.history.maxQualityReached = Math.max(state.history.maxQualityReached, state.sword.quality);
+      state.history.maxRockStage = Math.max(state.history.maxRockStage, state.rock.rockStage);
+      state.rock.xpMultiplier = Math.max(1, state.rock.xpMultiplier);
+      state.rock.levelPointGain = Math.max(1, Math.floor(state.rock.levelPointGain));
+      state.unlockFlags = state.unlockFlags || { eventBoost3: false, comboEvent5: false, qualityShard7: false, rockTrait15: false, shardBoost20: false, shardCost23: false, traitChoice28: false };
+      state.unlockFlags.eventBoost3 = Boolean(state.unlockFlags.eventBoost3);
+      state.unlockFlags.comboEvent5 = Boolean(state.unlockFlags.comboEvent5);
+      state.unlockFlags.qualityShard7 = Boolean(state.unlockFlags.qualityShard7);
+      state.unlockFlags.rockTrait15 = Boolean(state.unlockFlags.rockTrait15);
+      state.unlockFlags.shardBoost20 = Boolean(state.unlockFlags.shardBoost20);
+      state.unlockFlags.shardCost23 = Boolean(state.unlockFlags.shardCost23);
+      state.unlockFlags.traitChoice28 = Boolean(state.unlockFlags.traitChoice28);
+      state.currentRockTrait = normalizeRockTraitConfig(state.currentRockTrait);
+      state.lastDamageBreakdown.base = clampStat(state.sword.baseSharpness);
+      state.lastDamageBreakdown.additional = clampStat(state.sword.allocSharpness);
+      state.lastDamageBreakdown.total = clampStat(state.sword.sharpness);
+      state.lastEventTriggerSlash = clampStat(state.lastEventTriggerSlash);
+      state.permanentBuffs = state.permanentBuffs || {
+        trainingMark: 0,
+        masteryProof: 0,
+        undyingBlade: 0,
+        polishingSecret: 0,
+        sharpeningLevel: 0,
+        aftershockMark: 0,
+        qualityCostReductionLevel: 0,
+        fastAuto: false,
+        ultraFastAuto: false,
+        quadWieldUnlocked: false,
+        keepQualityOnRockAdvance: false
+      };
+      for (const buffKey of Object.keys(BUFF_DEFS)) {
+        state.permanentBuffs[buffKey] = clamp(
+          Math.floor(state.permanentBuffs[buffKey] || 0),
+          0,
+          getBuffMaxLevel(buffKey)
+        );
+      }
+      state.permanentBuffs.keepQualityOnRockAdvance = Boolean(state.permanentBuffs.keepQualityOnRockAdvance);
+      state.permanentBuffs.fastAuto = Boolean(state.permanentBuffs.fastAuto);
+      state.permanentBuffs.ultraFastAuto = Boolean(state.permanentBuffs.ultraFastAuto);
+      state.permanentBuffs.quadWieldUnlocked = Boolean(state.permanentBuffs.quadWieldUnlocked);
+      state.worldStar = clampStat(state.worldStar || 0);
+      state.autoUnlocked = Boolean(state.autoUnlocked);
+      state.autoOn = Boolean(state.autoOn);
+      state.rescueMode = Boolean(state.rescueMode);
+      state.lastFlavorId = typeof state.lastFlavorId === "string" ? state.lastFlavorId : "";
+      state.flavorUsedIds = Array.isArray(state.flavorUsedIds) ? state.flavorUsedIds.map((v) => String(v)) : [];
+      state.rockHalfFlavorChecked = Boolean(state.rockHalfFlavorChecked);
+      state.autoLoopEnabled = Boolean(state.autoLoopEnabled);
+      state.dualWieldUnlocked = Boolean(state.dualWieldUnlocked);
+      state.dualWieldOn = Boolean(state.dualWieldOn);
+      state.quadWieldOn = Boolean(state.quadWieldOn);
+      if (state.quadWieldOn && !state.permanentBuffs.quadWieldUnlocked) {
+        state.quadWieldOn = false;
+      }
+      if (state.dualWieldOn && !state.dualWieldUnlocked) {
+        state.dualWieldOn = false;
+      }
+      if (state.quadWieldOn) {
+        state.dualWieldOn = false;
+      }
+    }
+
+    function getSaveData() {
+      return {
+        saveVersion: SAVE_VERSION,
+        rock: {
+          rockStage: state.rock.rockStage,
+          maxHp: state.rock.maxHp,
+          hp: state.rock.hp,
+          xpMultiplier: state.rock.xpMultiplier,
+          levelPointGain: state.rock.levelPointGain
+        },
+        currentRockTrait: state.currentRockTrait,
+        sword: {
+          quality: state.sword.quality,
+          allocSharpness: state.sword.allocSharpness,
+          allocDurability: state.sword.allocDurability,
+          durability: state.sword.durability,
+          level: state.sword.level,
+          exp: state.sword.exp,
+          points: state.sword.points,
+          totalSlashes: state.sword.totalSlashes,
+          qualityShards: state.sword.qualityShards
+        },
+        history: {
+          totalSlashes: state.history.totalSlashes,
+          totalExpGained: state.history.totalExpGained,
+          totalRebirths: state.history.totalRebirths,
+          totalQualityUps: state.history.totalQualityUps,
+          maxQualityReached: state.history.maxQualityReached,
+          maxRockStage: state.history.maxRockStage
+        },
+        permanentBuffs: state.permanentBuffs,
+        worldStar: state.worldStar,
+        autoUnlocked: state.autoUnlocked,
+        autoOn: state.autoOn,
+        autoLoopEnabled: state.autoLoopEnabled,
+        dualWieldUnlocked: state.dualWieldUnlocked,
+        dualWieldOn: state.dualWieldOn,
+        quadWieldOn: state.quadWieldOn,
+        logs: state.logs.slice(-50),
+        activeEvent: state.activeEvent,
+        lastEventTriggerSlash: state.lastEventTriggerSlash,
+        unlockFlags: state.unlockFlags,
+        gameCleared: state.gameCleared,
+        debugMode: state.debugMode,
+        clearLogged: state.clearLogged
+      };
+    }
+
+    function saveGame() {
+      try {
+        localStorage.setItem(SAVE_KEY, JSON.stringify(getSaveData()));
+      } catch (error) {
+        // ignore storage errors
+      }
+    }
+
+    function loadGame() {
+      try {
+        const raw = localStorage.getItem(SAVE_KEY);
+        if (!raw) return { loaded: false, reason: "no_save" };
+        const parsed = JSON.parse(raw);
+        if (!parsed || typeof parsed !== "object") return { loaded: false, reason: "invalid_save" };
+        const savedVersion = Number.isFinite(parsed.saveVersion) ? parsed.saveVersion : 0;
+        if (savedVersion > SAVE_VERSION) {
+          state = createInitialState();
+          refreshSwordStats();
+          return { loaded: false, reason: "version_mismatch" };
+        }
+
+        const next = createInitialState();
+
+        if (parsed.rock && typeof parsed.rock === "object") {
+          if (Number.isFinite(parsed.rock.rockStage)) next.rock.rockStage = Math.max(1, Math.floor(parsed.rock.rockStage));
+          if (Number.isFinite(parsed.rock.maxHp)) next.rock.maxHp = Math.max(1, Math.floor(parsed.rock.maxHp));
+          if (Number.isFinite(parsed.rock.hp)) next.rock.hp = Math.max(0, Math.floor(parsed.rock.hp));
+          if (Number.isFinite(parsed.rock.xpMultiplier)) next.rock.xpMultiplier = Math.max(1, parsed.rock.xpMultiplier);
+          if (Number.isFinite(parsed.rock.levelPointGain)) next.rock.levelPointGain = Math.max(1, Math.floor(parsed.rock.levelPointGain));
+        }
+        next.currentRockTrait = normalizeRockTraitConfig(parsed.currentRockTrait);
+
+        if (parsed.sword && typeof parsed.sword === "object") {
+          const s = parsed.sword;
+          if (Number.isFinite(s.quality)) next.sword.quality = clamp(Math.floor(s.quality), 0, QUALITY_NAMES.length - 1);
+          if (Number.isFinite(s.allocSharpness)) next.sword.allocSharpness = Math.max(0, Math.floor(s.allocSharpness));
+          if (Number.isFinite(s.allocDurability)) next.sword.allocDurability = Math.max(0, Math.floor(s.allocDurability));
+          if (Number.isFinite(s.durability)) next.sword.durability = Math.max(0, Math.floor(s.durability));
+          if (Number.isFinite(s.level)) next.sword.level = Math.max(1, Math.floor(s.level));
+          if (Number.isFinite(s.exp)) next.sword.exp = Math.max(0, Math.floor(s.exp));
+          if (Number.isFinite(s.points)) next.sword.points = Math.max(0, Math.floor(s.points));
+          if (Number.isFinite(s.totalSlashes)) next.sword.totalSlashes = Math.max(0, Math.floor(s.totalSlashes));
+          if (Number.isFinite(s.qualityShards)) next.sword.qualityShards = Math.max(0, Math.floor(s.qualityShards));
+        }
+
+        if (parsed.history && typeof parsed.history === "object") {
+          const h = parsed.history;
+          if (Number.isFinite(h.totalSlashes)) next.history.totalSlashes = Math.max(0, Math.floor(h.totalSlashes));
+          if (Number.isFinite(h.totalExpGained)) next.history.totalExpGained = Math.max(0, Math.floor(h.totalExpGained));
+          if (Number.isFinite(h.totalRebirths)) next.history.totalRebirths = Math.max(0, Math.floor(h.totalRebirths));
+          if (Number.isFinite(h.totalQualityUps)) next.history.totalQualityUps = Math.max(0, Math.floor(h.totalQualityUps));
+          if (Number.isFinite(h.maxQualityReached)) next.history.maxQualityReached = clamp(Math.floor(h.maxQualityReached), 0, QUALITY_NAMES.length - 1);
+          if (Number.isFinite(h.maxRockStage)) next.history.maxRockStage = Math.max(1, Math.floor(h.maxRockStage));
+        }
+
+        if (parsed.permanentBuffs && typeof parsed.permanentBuffs === "object") {
+          const extraBuffCap = Math.max(0, Math.floor(next.rock.rockStage) - 15) + (Math.max(0, Math.floor(parsed.worldStar || 0)) * 5);
+          for (const buffKey of Object.keys(BUFF_DEFS)) {
+            if (Number.isFinite(parsed.permanentBuffs[buffKey])) {
+              const maxLv = BUFF_DEFS[buffKey].maxLevel + extraBuffCap;
+              next.permanentBuffs[buffKey] = clamp(
+                Math.floor(parsed.permanentBuffs[buffKey]),
+                0,
+                maxLv
+              );
+            }
+          }
+          next.permanentBuffs.keepQualityOnRockAdvance = Boolean(parsed.permanentBuffs.keepQualityOnRockAdvance);
+          next.permanentBuffs.fastAuto = Boolean(parsed.permanentBuffs.fastAuto);
+          next.permanentBuffs.ultraFastAuto = Boolean(parsed.permanentBuffs.ultraFastAuto);
+          next.permanentBuffs.quadWieldUnlocked = Boolean(parsed.permanentBuffs.quadWieldUnlocked);
+        }
+
+        next.autoUnlocked = Boolean(parsed.autoUnlocked);
+        next.autoOn = Boolean(parsed.autoOn);
+        next.autoLoopEnabled = parsed.autoLoopEnabled === undefined ? true : Boolean(parsed.autoLoopEnabled);
+        next.worldStar = Number.isFinite(parsed.worldStar) ? Math.max(0, Math.floor(parsed.worldStar)) : 0;
+        next.dualWieldUnlocked = Boolean(parsed.dualWieldUnlocked);
+        next.dualWieldOn = Boolean(parsed.dualWieldOn);
+        next.quadWieldOn = Boolean(parsed.quadWieldOn);
+
+        if (Array.isArray(parsed.logs)) {
+          next.logs = parsed.logs.slice(-50).map((line) => String(line));
+        }
+
+        if (parsed.activeEvent && typeof parsed.activeEvent === "object") {
+          const types = Array.isArray(parsed.activeEvent.types)
+            ? parsed.activeEvent.types.map((t) => String(t)).filter((t) => t === "xp" || t === "damage" || t === "durability")
+            : [];
+          const legacyType = String(parsed.activeEvent.type || "");
+          const normalizedTypes = types.length > 0
+            ? types
+            : (legacyType === "xp" || legacyType === "damage" || legacyType === "durability" ? [legacyType] : []);
+          const remainingClicks = Math.max(0, Math.floor(parsed.activeEvent.remainingClicks || 0));
+          if (normalizedTypes.length > 0 && remainingClicks > 0) {
+            next.activeEvent = {
+              types: normalizedTypes,
+              remainingClicks,
+              isCombo: Boolean(parsed.activeEvent.isCombo) || normalizedTypes.length > 1
+            };
+          }
+        }
+        if (Number.isFinite(parsed.lastEventTriggerSlash)) {
+          next.lastEventTriggerSlash = Math.max(0, Math.floor(parsed.lastEventTriggerSlash));
+        }
+        if (parsed.unlockFlags && typeof parsed.unlockFlags === "object") {
+          next.unlockFlags.eventBoost3 = Boolean(parsed.unlockFlags.eventBoost3);
+          next.unlockFlags.comboEvent5 = Boolean(parsed.unlockFlags.comboEvent5);
+          next.unlockFlags.qualityShard7 = Boolean(parsed.unlockFlags.qualityShard7);
+          next.unlockFlags.rockTrait15 = Boolean(parsed.unlockFlags.rockTrait15);
+          next.unlockFlags.shardBoost20 = Boolean(parsed.unlockFlags.shardBoost20);
+          next.unlockFlags.shardCost23 = Boolean(parsed.unlockFlags.shardCost23);
+          next.unlockFlags.traitChoice28 = Boolean(parsed.unlockFlags.traitChoice28);
+        } else {
+          // 旧セーブからの移行時は現在進行度に合わせて既定値を補完
+          next.unlockFlags.eventBoost3 = next.rock.rockStage >= 3;
+          next.unlockFlags.comboEvent5 = next.rock.rockStage >= 5;
+          next.unlockFlags.qualityShard7 = next.rock.rockStage >= 7;
+          next.unlockFlags.rockTrait15 = next.rock.rockStage >= 15;
+          next.unlockFlags.shardBoost20 = next.rock.rockStage >= 20;
+          next.unlockFlags.shardCost23 = next.rock.rockStage >= 23;
+          next.unlockFlags.traitChoice28 = next.rock.rockStage >= 28;
+        }
+
+        next.gameCleared = Boolean(parsed.gameCleared);
+        next.debugMode = Boolean(parsed.debugMode);
+        next.clearLogged = Boolean(parsed.clearLogged);
+
+        state = next;
+        refreshSwordStats();
+        state.sword.durability = clamp(state.sword.durability, 0, state.sword.maxDurability);
+        state.isRebirth = false;
+        return { loaded: true, reason: "ok" };
+      } catch (error) {
+        return { loaded: false, reason: "parse_error" };
+      }
+    }
+
+    function resetGame() {
+      const ok = window.confirm("本当にデータリセットしますか？");
+      if (!ok) return;
+
+      stopAutoLoop();
+      state = createInitialState();
+      state.screen = "title";
+      refreshSwordStats();
+      addLog("データをリセットしました。");
+      try {
+        localStorage.removeItem(SAVE_KEY);
+      } catch (error) {
+        // ignore storage errors
+      }
+      if (nextRockTimer) {
+        clearTimeout(nextRockTimer);
+        nextRockTimer = null;
+      }
+      inputLockGeneration += 1;
+      inputLockCount = 0;
+      state.isInputLocked = false;
+      if (els.rebirthModal.open) {
+        els.rebirthModal.close();
+      }
+      if (els.traitSelectModal.open) {
+        els.traitSelectModal.close();
+      }
+      if (els.ultimateClearModal.open) {
+        els.ultimateClearModal.close();
+      }
+      pendingRockTraitSelection = null;
+      saveGame();
+      render();
+    }
+
+    function resetForCompression() {
+      state.rock.rockStage = 1;
+      state.currentRockTrait = createSingleTrait("normal", 1);
+      const trait = getCurrentRockTrait();
+      state.rock.maxHp = Math.floor(calcRockMaxHp(1) * trait.hpMultiplier);
+      state.rock.hp = state.rock.maxHp;
+      refreshRockBonus();
+
+      if ((state.worldStar || 0) < 2) {
+        state.sword.quality = 0;
+      }
+      state.sword.allocSharpness = 0;
+      state.sword.allocDurability = 0;
+      state.sword.level = 1;
+      state.sword.exp = 0;
+      state.sword.points = 0;
+      state.sword.durability = 50;
+      state.autoUnlocked = false;
+      state.autoOn = false;
+      state.dualWieldUnlocked = false;
+      state.dualWieldOn = false;
+      state.quadWieldOn = false;
+      state.activeEvent = null;
+      state.lastFlavorId = "";
+      state.flavorUsedIds = [];
+      state.rockHalfFlavorChecked = false;
+      state.gameCleared = false;
+      state.clearLogged = false;
+      state.history.maxRockStage = Math.max(state.history.maxRockStage, state.rock.rockStage);
+      els.attackBtn.classList.remove("final-slash");
+      els.rockBarContainer.classList.remove("crumble");
+      els.rockHpText.classList.remove("fade-out");
+      els.rockCutText.style.display = "none";
+      refreshSwordStats();
+      state.sword.durability = state.sword.maxDurability;
+      addLog(`☆${formatNumber(state.worldStar)} の世界へ。`);
+    }
+
+    function handleCompression() {
+      addLog("――凝縮。");
+      lockInputFor(800, () => {
+        state.worldStar = clampStat((state.worldStar || 0) + 1);
+        if (state.worldStar === 2) addLog("剣は凝縮でも失われない。");
+        if (state.worldStar === 3) addLog("剣Ptの巡りが倍化した。");
+        if (state.worldStar === 4) addLog("欠片が倍に実る。");
+        if (state.worldStar === 5) addLog("称号が刻まれた――切れ続ける者。");
+        tryRockFlavor({ force: true });
+        resetForCompression();
+      });
+    }
+
+    function startGameFromTitle() {
+      state.screen = "game";
+      ensureAutoLoopState();
+      render();
+    }
+
+    function gainExp(amount) {
+      state.sword.exp = clampStat(state.sword.exp + amount);
+      while (state.sword.exp >= expRequiredForLevel(state.sword.level)) {
+        state.sword.level += 1;
+        const gainedPointsBase = state.rock.levelPointGain + getBuffLevel("masteryProof");
+        const gainedPoints = applyQualityPointGainMultiplier(gainedPointsBase);
+        const gainedShards = qualityShardGainByRockStage(state.rock.rockStage);
+        state.sword.points = clampStat(state.sword.points + gainedPoints);
+        if (gainedShards > 0) {
+          state.sword.qualityShards = clampStat(state.sword.qualityShards + gainedShards);
+          addLog(`剣力レベルが ${state.sword.level} に上昇。剣ポイント +${formatNumber(gainedPoints)} / 剣質片 +${formatNumber(gainedShards)}。`);
+        } else {
+          addLog(`剣力レベルが ${state.sword.level} に上昇。剣ポイント +${formatNumber(gainedPoints)}。`);
+        }
+      }
+      state.sword.expToLevel = expRequiredForLevel(state.sword.level);
+    }
+
+    function clearGame() {
+      if (state.effectFlags.rockAdvancePlaying) return;
+      stopAutoLoop();
+      state.rock.hp = 0;
+      state.gameCleared = true;
+      if (!state.clearLogged) {
+        addLog("岩を断った。");
+        state.clearLogged = true;
+      }
+      playClear();
+      if (nextRockTimer) {
+        clearTimeout(nextRockTimer);
+      }
+      nextRockTimer = setTimeout(() => {
+        advanceToNextRock();
+      }, 3000);
+      saveGame();
+      render();
+    }
+
+    function finalizeAdvanceToNextRock(nextStage, traitConfig) {
+      state.rock.rockStage = nextStage;
+      state.currentRockTrait = normalizeRockTraitConfig(traitConfig);
+      const trait = getCurrentRockTrait();
+      state.rock.maxHp = Math.floor(calcRockMaxHp(nextStage) * trait.hpMultiplier);
+      state.rock.hp = state.rock.maxHp;
+      refreshRockBonus();
+      checkRockUnlockLogs();
+
+      // 岩ランク以外を初期化（永続進行は rockStage のみ）
+      const keepQuality = Boolean(state.permanentBuffs.keepQualityOnRockAdvance);
+      if (!keepQuality) {
+        state.sword.quality = 0;
+      }
+      state.sword.allocSharpness = 0;
+      state.sword.allocDurability = 0;
+      state.sword.level = 1;
+      state.sword.exp = 0;
+      state.sword.points = 0;
+      state.autoUnlocked = false;
+      state.autoOn = false;
+      state.dualWieldUnlocked = false;
+      state.dualWieldOn = false;
+      state.quadWieldOn = false;
+      state.activeEvent = null;
+      state.lastFlavorId = "";
+      state.flavorUsedIds = [];
+      state.rockHalfFlavorChecked = false;
+
+      state.history.maxRockStage = Math.max(state.history.maxRockStage, state.rock.rockStage);
+      state.gameCleared = false;
+      state.clearLogged = false;
+      els.attackBtn.classList.remove("final-slash");
+      els.rockBarContainer.classList.remove("crumble");
+      els.rockHpText.classList.remove("fade-out");
+      els.rockCutText.style.display = "none";
+      addLog("岩はさらに硬くなった。");
+      addLog("だが、剣の成長は加速する。");
+      if (keepQuality) {
+        addLog("剣の格は失われない。");
+      }
+      addLog(`次の岩は『${trait.name}』だ。`);
+      addLog(`岩ランク ${state.rock.rockStage} の岩が現れた。`);
+      refreshSwordStats();
+      state.sword.durability = state.sword.maxDurability;
+      state.effectFlags.rockAdvancePlaying = false;
+      saveGame();
+      render();
+    }
+
+    function advanceToNextRock() {
+      if (!state.gameCleared || state.effectFlags.rockAdvancePlaying) return;
+      stopAutoLoop();
+      state.effectFlags.rockAdvancePlaying = true;
+      if (nextRockTimer) {
+        clearTimeout(nextRockTimer);
+        nextRockTimer = null;
+      }
+
+      const nextStage = Math.max(1, state.rock.rockStage + 1);
+      if (nextStage >= 30) {
+        state.effectFlags.rockAdvancePlaying = false;
+        handleCompression();
+        saveGame();
+        render();
+        return;
+      }
+      if (nextStage >= 24) {
+        openTraitSelection(nextStage);
+        return;
+      }
+      finalizeAdvanceToNextRock(nextStage, rollSingleTraitConfig(nextStage));
+    }
+
+    function attack(source = "manual") {
+      if (state.isInputLocked || state.isRebirth || state.gameCleared) return;
+      if (state.sword.durability <= 0) {
+        openRebirth();
+        return;
+      }
+
+      playSlash(false);
+
+      const trait = getCurrentRockTrait();
+      const wield = currentWieldState();
+      const boostedSingle = Boolean(state.activeEvent && !state.activeEvent.isCombo && state.rock.rockStage >= 3);
+      const damageMultiplier = hasEventType("damage") ? (boostedSingle ? 2.5 : 2.0) : 1;
+      const xpMultiplier = hasEventType("xp") ? (boostedSingle ? 2.5 : 2.0) : 1;
+      const noDurabilityLoss = hasEventType("durability");
+
+      const beforeRockHp = state.rock.hp;
+      const damage = clampStat(state.sword.sharpness * damageMultiplier * trait.damageMultiplier * wield.damageMult);
+      state.lastDamageBreakdown.base = clampStat(state.sword.baseSharpness);
+      state.lastDamageBreakdown.additional = clampStat(state.sword.allocSharpness);
+      state.lastDamageBreakdown.total = damage;
+      state.rock.hp = Math.max(0, state.rock.hp - damage);
+      if (!state.rockHalfFlavorChecked && beforeRockHp >= state.rock.maxHp * 0.5 && state.rock.hp < state.rock.maxHp * 0.5) {
+        state.rockHalfFlavorChecked = true;
+        tryRockFlavor();
+      }
+      if (!noDurabilityLoss) {
+        const durabilityCost = Math.ceil(1 * wield.durabilityMult);
+        state.sword.durability = Math.max(0, state.sword.durability - durabilityCost);
+      }
+      consumeActiveEventClick();
+      state.sword.totalSlashes = clampStat(state.sword.totalSlashes + 1);
+      state.history.totalSlashes = clampStat(state.history.totalSlashes + 1);
+      const eventInterval = trait.eventInterval;
+      if (state.sword.totalSlashes % eventInterval === 0 && state.lastEventTriggerSlash !== state.sword.totalSlashes) {
+        triggerEvent();
+      }
+      const permanentXpRate = 1 + getBuffLevel("trainingMark") * 0.1;
+      const gainedExp = Math.max(1, state.rock.xpMultiplier * xpMultiplier * permanentXpRate * trait.xpMultiplier);
+      state.history.totalExpGained = clampStat(state.history.totalExpGained + gainedExp);
+      gainExp(gainedExp);
+
+      if (source === "auto") {
+        if (state.rescueMode) {
+          pushRescueLog();
+        } else {
+          pushAutoLog();
+        }
+      } else {
+        if (!state.rescueMode) {
+          addLog(`剣闘！ 岩へ ${formatNumber(damage)} ダメージ。`);
+        }
+      }
+
+      if (state.rock.hp === 0) {
+        clearGame();
+        return;
+      }
+
+      if (state.sword.durability === 0) {
+        addLog("――剣が折れた。");
+        addLog("剣生へ。");
+        stopAutoLoop();
+        playBreak();
+        saveGame();
+        render();
+        return;
+      }
+
+      saveGame();
+      render();
+    }
+
+    function openRebirth() {
+      stopAutoLoop();
+      state.isRebirth = true;
+      if (!els.rebirthModal.open) {
+        els.rebirthModal.showModal();
+      }
+      render();
+    }
+
+    function closeRebirth() {
+      state.isRebirth = false;
+      if (els.rebirthModal.open) {
+        els.rebirthModal.close();
+      }
+      ensureAutoLoopState();
+      render();
+    }
+
+    function allocateByPoints(kind, pointsToSpend) {
+      if (!state.isRebirth) return;
+      const spend = Math.max(0, Math.floor(pointsToSpend));
+      if (spend <= 0) return;
+      const actual = Math.min(spend, state.sword.points);
+      if (actual <= 0) return;
+
+      state.sword.points = clampStat(state.sword.points - actual);
+      if (kind === "sharpness") {
+        state.sword.allocSharpness = clampStat(state.sword.allocSharpness + actual);
+        addLog(`剣生: 切れ味+${formatNumber(actual)} を適用。`);
+      } else if (kind === "durability") {
+        const gain = actual * 10;
+        state.sword.allocDurability = clampStat(state.sword.allocDurability + gain);
+        addLog(`剣生: 耐久+${formatNumber(gain)} を適用。`);
+      }
+      refreshSwordStats();
+      saveGame();
+      render();
+    }
+
+    function allocateMax(kind) {
+      allocateByPoints(kind, state.sword.points);
+    }
+
+    function unlockAutoAttack() {
+      if (!state.isRebirth) return;
+      if (state.rock.rockStage >= 25) return;
+      if (state.autoUnlocked) return;
+      if (state.sword.points < AUTO_UNLOCK_COST) return;
+      state.sword.points = clampStat(state.sword.points - AUTO_UNLOCK_COST);
+      state.autoUnlocked = true;
+      state.autoOn = false;
+      addLog("自動攻撃を解禁した。");
+      saveGame();
+      render();
+    }
+
+    function toggleAuto() {
+      if (!isAutoAvailable()) return;
+      if (state.autoOn) {
+        stopAutoLoop();
+      } else {
+        state.autoOn = true;
+        ensureAutoLoopState();
+      }
+      saveGame();
+      render();
+    }
+
+    function toggleRescueMode() {
+      const shouldResumeAuto = Boolean(state.autoOn && isAutoAvailable());
+      stopAutoLoop();
+      state.rescueMode = !state.rescueMode;
+      if (shouldResumeAuto) {
+        state.autoOn = true;
+        ensureAutoLoopState();
+      }
+      render();
+    }
+
+    function openUltimateClearModal() {
+      stopAutoLoop();
+      state.isInputLocked = true;
+      if (!els.ultimateClearModal.open) {
+        els.ultimateClearModal.showModal();
+      }
+      render();
+    }
+
+    function closeUltimateClearModal() {
+      if (els.ultimateClearModal.open) {
+        els.ultimateClearModal.close();
+      }
+      state.isInputLocked = false;
+      ensureAutoLoopState();
+      render();
+    }
+
+    function goHomeFromUltimate() {
+      const ok = window.confirm("家に帰りますか？全データを初期化します。");
+      if (!ok) return;
+      stopAutoLoop();
+      try {
+        localStorage.removeItem(SAVE_KEY);
+      } catch (error) {
+        // ignore
+      }
+      state = createInitialState();
+      state.screen = "title";
+      refreshSwordStats();
+      addLog("旅を終えて、家に帰った。");
+      if (els.ultimateClearModal.open) {
+        els.ultimateClearModal.close();
+      }
+      saveGame();
+      render();
+    }
+
+    function upgradeQuality() {
+      if (!state.isRebirth) return;
+      const cost = nextQualityUpgradeCost();
+      if (!Number.isFinite(cost)) return;
+      if (state.sword.points < cost) return;
+
+      state.sword.points = clampStat(state.sword.points - cost);
+      state.sword.quality += 1;
+
+      if (state.sword.quality > QUALITY_NAMES.length - 1) {
+        state.sword.quality = QUALITY_NAMES.length - 1;
+      }
+
+      if (state.sword.quality > 0) {
+        state.sword.allocSharpness = 0;
+        state.sword.allocDurability = 0;
+        state.sword.points = 0;
+        state.sword.level = 1;
+        state.sword.exp = 0;
+      }
+
+      state.history.totalQualityUps = clampStat(state.history.totalQualityUps + 1);
+
+      refreshSwordStats();
+      state.sword.durability = state.sword.baseDurability;
+      addLog(`剣質アップ成立。現在の剣は ${currentSwordName()}。`);
+      addLog("すべてを捨てた。");
+      addLog("剣は、次の格へ。");
+      if (state.sword.quality >= QUALITY_NAMES.length - 1) {
+        addLog("――アルティメット。終点に辿り着いた。");
+        openUltimateClearModal();
+      }
+      playQualityUp(currentSwordName());
+      saveGame();
+      render();
+    }
+
+    function purchasePermanentBuff(buffKey) {
+      if (!state.isRebirth) return;
+      if (state.rock.rockStage < 7) return;
+      if (buffKey === "ultraFastAuto") {
+        if (state.permanentBuffs.ultraFastAuto) return;
+        const cost = applyShardCostMultiplier(500);
+        if (state.sword.qualityShards < cost) return;
+        state.sword.qualityShards = clampStat(state.sword.qualityShards - cost);
+        state.permanentBuffs.ultraFastAuto = true;
+        addLog("永続バフ『超高速自動戦闘』を得た。");
+        saveGame();
+        ensureAutoLoopState();
+        render();
+        return;
+      }
+      if (buffKey === "quadWieldUnlock") {
+        if (state.permanentBuffs.quadWieldUnlocked) return;
+        const cost = applyShardCostMultiplier(50);
+        if (state.sword.qualityShards < cost) return;
+        state.sword.qualityShards = clampStat(state.sword.qualityShards - cost);
+        state.permanentBuffs.quadWieldUnlocked = true;
+        addLog("流派『四刀流』を会得した。");
+        saveGame();
+        render();
+        return;
+      }
+      if (buffKey === "quadWieldToggle") {
+        toggleQuadWield();
+        return;
+      }
+      if (buffKey === "fastAuto") {
+        if (state.permanentBuffs.fastAuto) return;
+        const cost = applyShardCostMultiplier(100);
+        if (state.sword.qualityShards < cost) return;
+        state.sword.qualityShards = clampStat(state.sword.qualityShards - cost);
+        state.permanentBuffs.fastAuto = true;
+        addLog("永続バフ『高速自動攻撃』を得た。");
+        saveGame();
+        ensureAutoLoopState();
+        render();
+        return;
+      }
+      if (buffKey === "keepQualityOnRockAdvance") {
+        if (state.rock.rockStage < 10) return;
+        if (state.permanentBuffs.keepQualityOnRockAdvance) return;
+        const cost = applyShardCostMultiplier(KEEP_QUALITY_BUFF_COST);
+        if (state.sword.qualityShards < cost) return;
+        state.sword.qualityShards = clampStat(state.sword.qualityShards - cost);
+        state.permanentBuffs.keepQualityOnRockAdvance = true;
+        addLog("永続バフ『剣質の記憶』を得た。");
+        saveGame();
+        render();
+        return;
+      }
+      const def = BUFF_DEFS[buffKey];
+      if (!def) return;
+      const currentLv = getBuffLevel(buffKey);
+      const maxLv = getBuffMaxLevel(buffKey);
+      if (currentLv >= maxLv) return;
+      const cost = applyShardCostMultiplier(getBuffCost(buffKey));
+      if (!Number.isFinite(cost) || state.sword.qualityShards < cost) return;
+
+      state.sword.qualityShards = clampStat(state.sword.qualityShards - cost);
+      state.permanentBuffs[buffKey] = currentLv + 1;
+      refreshSwordStats();
+      if (buffKey === "sharpeningLevel") {
+        addLog(`研ぎ澄ましが進んだ。（Lv${formatNumber(state.permanentBuffs.sharpeningLevel)}）`);
+      } else {
+        addLog(`永続バフ『${def.name}』を強化した。`);
+      }
+      saveGame();
+      render();
+    }
+
+    function toggleDev() {
+      state.debugMode = !state.debugMode;
+      render();
+    }
+
+    function switchLeftTab(tabName) {
+      state.leftTab = tabName === "history" ? "history" : "log";
+      render();
+    }
+
+    function resumeFromRebirth() {
+      state.sword.durability = state.sword.maxDurability;
+      state.history.totalRebirths = clampStat(state.history.totalRebirths + 1);
+      addLog("剣生を終えて戦闘再開。");
+      saveGame();
+      closeRebirth();
+    }
+
+    function render() {
+      const isTitleScreen = state.screen === "title";
+      els.titleScreen.style.display = isTitleScreen ? "grid" : "none";
+      els.mainContainer.style.display = isTitleScreen ? "none" : "grid";
+
+      const rockRatio = state.rock.maxHp === 0 ? 0 : state.rock.hp / state.rock.maxHp;
+      const durRatio = state.sword.maxDurability === 0 ? 0 : state.sword.durability / state.sword.maxDurability;
+      const trait = getCurrentRockTrait();
+      const wield = currentWieldState();
+      const qualityGainMult = qualityGainMultiplierByRockStage(state.rock.rockStage);
+      const shardCostMult = shardCostMultiplierByRockStage(state.rock.rockStage);
+      const compressMult = rockBonusMultiplier();
+      const rockSharpnessBonus = rockSharpnessBonusByStage(state.rock.rockStage);
+      const starEffects = [
+        (state.worldStar || 0) >= 2 ? "☆2:剣保持" : "☆2:未",
+        (state.worldStar || 0) >= 3 ? "☆3:剣Ptx2" : "☆3:未",
+        (state.worldStar || 0) >= 4 ? "☆4:欠片x2" : "☆4:未"
+      ].join(" / ");
+
+      els.rockStageText.textContent = `岩ランク：${formatNumber(state.rock.rockStage)} ☆${formatNumber(state.worldStar || 0)}`;
+      els.rockBonusText.textContent = `岩ランクボーナス：XP ×${state.rock.xpMultiplier.toFixed(2)} / LvUP +${formatNumber(state.rock.levelPointGain)}pt / 剣Pt獲得 ×${qualityGainMult.toFixed(2)} / 欠片 ×${shardMultiplierByRockStage(state.rock.rockStage).toFixed(2)} / 欠片消費 ×${shardCostMult.toFixed(2)} / 基礎切れ味 +${formatNumber(rockSharpnessBonus)} / 凝縮ボーナス ×${compressMult.toFixed(2)} / ${starEffects}`;
+      els.rockTraitText.textContent = `岩の性質：${trait.name}（${trait.description}）`;
+      els.wieldStatusText.textContent = `流派：${wield.name}（${wield.name === "通常" ? "OFF" : "ON"}）`;
+      els.activeEventText.textContent = state.activeEvent
+        ? `イベント：${eventLabels(state.activeEvent.types)}（残り${formatNumber(state.activeEvent.remainingClicks)}）`
+        : "イベント：なし";
+      els.rockHpText.textContent = `${formatNumber(state.rock.hp)} / ${formatNumber(state.rock.maxHp)}`;
+      els.rockBar.style.width = `${clamp(rockRatio * 100, 0, 100)}%`;
+
+      els.swordDurText.textContent = `${formatNumber(state.sword.durability)} / ${formatNumber(state.sword.maxDurability)}`;
+      els.durabilityGauge.style.height = `${clamp(durRatio * 100, 0, 100)}%`;
+      els.sharpnessText.textContent = formatNumber(state.sword.sharpness);
+      els.expText.textContent = `${formatNumber(state.sword.exp)} / ${formatNumber(state.sword.expToLevel)}`;
+      els.slashCountText.textContent = formatNumber(state.sword.totalSlashes);
+      els.levelText.textContent = String(state.sword.level);
+      els.pointText.textContent = formatNumber(state.sword.points);
+      els.qualityShardText.textContent = formatNumber(state.sword.qualityShards);
+      els.swordNameText.textContent = `現在の剣：${currentSwordName()}`;
+
+      els.attackBtn.disabled = state.isInputLocked || state.isRebirth || state.gameCleared;
+      els.attackBtnLabel.textContent = state.gameCleared ? "完了" : "剣闘";
+      els.autoToggleBtn.classList.toggle("hidden", !isAutoAvailable());
+      els.autoToggleBtn.textContent = state.autoOn ? `AUTO ON (${getAutoIntervalMs()}ms)` : "AUTO OFF";
+      els.rescueToggleBtn.textContent = state.rescueMode ? "救済 ON" : "救済 OFF";
+      els.rescueToggleBtn.classList.toggle("on", state.rescueMode);
+      els.rescueIndicator.classList.toggle("show", state.rescueMode && state.screen === "game");
+      const bladeTheme = bladeThemeByQuality(state.sword.quality);
+      els.attackBtn.style.setProperty("--blade-start", bladeTheme.start);
+      els.attackBtn.style.setProperty("--blade-mid", bladeTheme.mid);
+      els.attackBtn.style.setProperty("--blade-end", bladeTheme.end);
+      els.attackBtn.style.setProperty("--tip", bladeTheme.tip);
+      els.attackBtn.style.setProperty("--blade-glow", bladeTheme.glow);
+      els.clearMessage.classList.toggle("show", state.gameCleared);
+      els.nextRockBtn.classList.toggle("show", state.gameCleared);
+
+      const isHistory = state.leftTab === "history";
+      els.tabLogBtn.classList.toggle("active", !isHistory);
+      els.tabHistoryBtn.classList.toggle("active", isHistory);
+      els.log.style.display = isHistory ? "none" : "block";
+      els.historyPanel.classList.toggle("show", isHistory);
+
+      els.histTotalSlashes.textContent = formatNumber(state.history.totalSlashes);
+      els.histTotalExp.textContent = formatNumber(state.history.totalExpGained);
+      els.histTotalRebirth.textContent = formatNumber(state.history.totalRebirths);
+      els.histTotalQualityUp.textContent = formatNumber(state.history.totalQualityUps);
+      els.histMaxQuality.textContent = swordNameByQualityIndex(state.history.maxQualityReached);
+      els.histMaxRockStage.textContent = formatNumber(state.history.maxRockStage);
+      const baseTitle = titleByMaxQuality(state.history.maxQualityReached);
+      els.histTitle.textContent = (state.worldStar || 0) >= 5
+        ? (baseTitle ? `切れ続ける者：${baseTitle}` : "切れ続ける者")
+        : baseTitle;
+
+      els.devToggleBtn.textContent = state.debugMode ? "DEV ON" : "DEV OFF";
+      els.devToggleBtn.classList.toggle("on", state.debugMode);
+      els.devPanel.classList.toggle("show", state.debugMode);
+      els.debugPanel.classList.remove("show");
+
+      const tier = qualityStageNumber();
+      const levelBase = baseXP(state.sword.level, tier);
+      const levelCoef = qualityMultiplier(tier);
+      const boostActive = isEarlyLevelXpBoostActive(state.sword.level);
+      const needXp = expRequiredForLevel(state.sword.level);
+      const boostText = boostActive ? " * 0.85" : "";
+      els.devXpFormula.textContent = `${formatNumber(needXp)} = ceil( ${formatNumber(levelBase)} * ${levelCoef.toFixed(2)}${boostText} )`;
+
+      const qBaseCost = baseQualityUpgradeCost();
+      const qCost = nextQualityUpgradeCost();
+      const reductionRate = qualityUpgradeReductionRate();
+      els.devQualityCostCalc.textContent = Number.isFinite(qCost)
+        ? `${formatNumber(qCost)} = max(ceil(${formatNumber(qBaseCost)}*0.4), ceil(${formatNumber(qBaseCost)}*(1-${(reductionRate * 100).toFixed(0)}%)))`
+        : "MAX";
+
+      els.devDamageBreakdown.textContent = `${formatNumber(state.lastDamageBreakdown.total)} = ${formatNumber(state.lastDamageBreakdown.base)} + ${formatNumber(state.lastDamageBreakdown.additional)}`;
+      const totalSlashes = Math.floor(state.sword.totalSlashes);
+      const interval = trait.eventInterval;
+      const slashMod = totalSlashes % interval;
+      const nextEventAt = slashMod === 0 ? totalSlashes + interval : totalSlashes + (interval - slashMod);
+      els.devEventMeta.textContent = `totalSlashes=${formatNumber(totalSlashes)} / totalSlashes%${interval}=${slashMod} / nextEventAt=${formatNumber(nextEventAt)}`;
+      els.devEventState.textContent = state.activeEvent
+        ? `activeEvent.types=[${state.activeEvent.types.join(",")}] / remainingClicks=${formatNumber(state.activeEvent.remainingClicks)} / isCombo=${state.activeEvent.isCombo}`
+        : "activeEvent=null";
+      els.devQualityGainMult.textContent = `剣Pt獲得倍率=${qualityGainMult.toFixed(2)} (1 + 0.10 * (${formatNumber(state.rock.rockStage)} - 1))`;
+
+      if (state.debugMode) {
+        els.devStateJson.textContent = JSON.stringify(state, null, 2);
+      }
+
+      if (pendingRockTraitSelection) {
+        els.traitSelectStageText.textContent = `岩ランク ${formatNumber(pendingRockTraitSelection.nextStage)} の性質を選択`;
+        els.traitSelectList.innerHTML = "";
+        const wrap = document.createElement("div");
+        wrap.className = "trait-select-grid";
+        pendingRockTraitSelection.options.forEach((option, index) => {
+          const prev = state.currentRockTrait;
+          state.currentRockTrait = option;
+          const traitDef = getCurrentRockTrait();
+          state.currentRockTrait = prev;
+          const btn = document.createElement("button");
+          btn.type = "button";
+          btn.className = "trait-select-btn";
+          btn.setAttribute("data-option-index", String(index));
+          btn.textContent = `${traitDef.name}：${traitDef.description}`;
+          wrap.appendChild(btn);
+        });
+        els.traitSelectList.appendChild(wrap);
+      } else {
+        els.traitSelectList.innerHTML = "";
+      }
+
+      els.log.innerHTML = "";
+      for (const line of state.logs) {
+        const li = document.createElement("li");
+        li.textContent = line;
+        els.log.appendChild(li);
+      }
+      els.log.scrollTop = els.log.scrollHeight;
+
+      if (state.isRebirth) {
+        els.modalSwordInfo.textContent = `現在の剣：${currentSwordName()} / 基礎切れ味 ${formatNumber(state.sword.baseSharpness)} / 基礎耐久 ${formatNumber(state.sword.baseDurability)}`;
+        els.modalPoints.textContent = `剣ポイント: ${formatNumber(state.sword.points)}`;
+        els.modalShards.textContent = `剣質片: ${formatNumber(state.sword.qualityShards)}`;
+        els.modalQualityCost.textContent = Number.isFinite(qCost)
+          ? `次の剣質アップコスト: ${formatNumber(qCost)}pt（基礎${formatNumber(qBaseCost)}pt / 軽減${(reductionRate * 100).toFixed(0)}%）`
+          : "剣質は最大ランクです";
+        els.upgradeQualityBtn.disabled = !Number.isFinite(qCost) || state.sword.points < qCost;
+        const canSpend1 = state.sword.points >= 1;
+        const canSpend10 = state.sword.points >= 10;
+        const canSpend100 = state.sword.points >= 100;
+        const canSpendAny = state.sword.points > 0;
+        if (state.rock.rockStage >= 25) {
+          els.unlockAutoBtn.disabled = true;
+          els.unlockAutoBtn.textContent = "AUTO常時解禁済み";
+        } else {
+          els.unlockAutoBtn.disabled = state.autoUnlocked || state.sword.points < AUTO_UNLOCK_COST;
+          els.unlockAutoBtn.textContent = `自動攻撃を解禁（${AUTO_UNLOCK_COST}pt）`;
+        }
+        els.unlockDualWieldBtn.disabled = state.dualWieldUnlocked || state.sword.points < 30;
+        els.toggleDualWieldBtn.disabled = !state.dualWieldUnlocked;
+        els.toggleDualWieldBtn.textContent = state.dualWieldOn ? "二刀流 ON" : "二刀流 OFF";
+        els.addSharpnessBtn.disabled = !canSpend1;
+        els.addSharpness10Btn.disabled = !canSpend10;
+        els.addSharpness100Btn.disabled = !canSpend100;
+        els.addSharpnessMaxBtn.disabled = !canSpendAny;
+        els.addDurabilityBtn.disabled = !canSpend1;
+        els.addDurability10Btn.disabled = !canSpend10;
+        els.addDurability100Btn.disabled = !canSpend100;
+        els.addDurabilityMaxBtn.disabled = !canSpendAny;
+        if (state.rock.rockStage >= 7) {
+          els.buffShopWrap.style.display = "block";
+          els.buffShopList.innerHTML = "";
+          for (const [buffKey, def] of Object.entries(BUFF_DEFS)) {
+            const lv = getBuffLevel(buffKey);
+            const baseCost = getBuffCost(buffKey);
+            const cost = applyShardCostMultiplier(baseCost);
+            if (buffKey === "qualityCostReductionLevel" && state.rock.rockStage < 17) {
+              const lockRow = document.createElement("div");
+              lockRow.className = "buff-item";
+              lockRow.innerHTML = `
+                <div class="buff-main">
+                  <strong>${def.name} LOCKED</strong>
+                  <span>${def.desc}</span>
+                  <span>岩ランク17で解禁</span>
+                </div>
+                <button type="button" disabled>未解禁</button>
+              `;
+              els.buffShopList.appendChild(lockRow);
+              continue;
+            }
+            const maxLv = getBuffMaxLevel(buffKey);
+            const canBuy = lv < maxLv && state.sword.qualityShards >= cost;
+            const row = document.createElement("div");
+            row.className = "buff-item";
+            row.innerHTML = `
+              <div class="buff-main">
+                <strong>${def.name} Lv.${formatNumber(lv)}/${formatNumber(getBuffMaxLevel(buffKey))}</strong>
+                <span>${def.desc}</span>
+                <span>コスト: ${Number.isFinite(cost) ? `${formatNumber(cost)}欠片` : "MAX"}</span>
+              </div>
+              <button type="button" data-buff-key="${buffKey}" ${canBuy ? "" : "disabled"}>強化</button>
+            `;
+            els.buffShopList.appendChild(row);
+          }
+
+          const fastAutoRow = document.createElement("div");
+          fastAutoRow.className = "buff-item";
+          const fastOwned = Boolean(state.permanentBuffs.fastAuto);
+          const fastCost = applyShardCostMultiplier(100);
+          const fastCanBuy = !fastOwned && state.sword.qualityShards >= fastCost;
+          fastAutoRow.innerHTML = `
+            <div class="buff-main">
+              <strong>高速自動攻撃 ${fastOwned ? "購入済み" : "未購入"}</strong>
+              <span>AUTO有効時の間隔を ${AUTO_BASE_INTERVAL_MS}ms→${AUTO_FAST_INTERVAL_MS}ms</span>
+              <span>コスト: ${formatNumber(fastCost)}欠片</span>
+            </div>
+            <button type="button" data-buff-key="fastAuto" ${fastCanBuy ? "" : "disabled"}>${fastOwned ? "購入済み" : "購入"}</button>
+          `;
+          els.buffShopList.appendChild(fastAutoRow);
+
+          const ultraAutoRow = document.createElement("div");
+          ultraAutoRow.className = "buff-item";
+          const ultraOwned = Boolean(state.permanentBuffs.ultraFastAuto);
+          const ultraCost = applyShardCostMultiplier(500);
+          const ultraCanBuy = !ultraOwned && state.sword.qualityShards >= ultraCost;
+          ultraAutoRow.innerHTML = `
+            <div class="buff-main">
+              <strong>超高速自動戦闘 ${ultraOwned ? "購入済み" : "未購入"}</strong>
+              <span>AUTO有効時の間隔を最優先で ${AUTO_ULTRA_INTERVAL_MS}ms にする</span>
+              <span>コスト: ${formatNumber(ultraCost)}欠片</span>
+            </div>
+            <button type="button" data-buff-key="ultraFastAuto" ${ultraCanBuy ? "" : "disabled"}>${ultraOwned ? "購入済み" : "購入"}</button>
+          `;
+          els.buffShopList.appendChild(ultraAutoRow);
+
+          const quadRow = document.createElement("div");
+          quadRow.className = "buff-item";
+          const quadOwned = Boolean(state.permanentBuffs.quadWieldUnlocked);
+          const quadCost = applyShardCostMultiplier(50);
+          const quadCanBuy = !quadOwned && state.sword.qualityShards >= quadCost;
+          quadRow.innerHTML = `
+            <div class="buff-main">
+              <strong>四刀流 ${quadOwned ? "購入済み" : "未購入"} / ${state.quadWieldOn ? "ON" : "OFF"}</strong>
+              <span>最終ダメージ ×2.5 / 耐久消費 ×3.0</span>
+              <span>コスト: ${formatNumber(quadCost)}欠片</span>
+            </div>
+            <div class="modal-actions">
+              <button type="button" data-buff-key="quadWieldUnlock" ${quadCanBuy ? "" : "disabled"}>${quadOwned ? "購入済み" : "購入"}</button>
+              <button type="button" data-buff-key="quadWieldToggle" ${quadOwned ? "" : "disabled"}>${state.quadWieldOn ? "ON" : "OFF"}</button>
+            </div>
+          `;
+          els.buffShopList.appendChild(quadRow);
+
+          const keepRow = document.createElement("div");
+          keepRow.className = "buff-item";
+          if (state.rock.rockStage < 10) {
+            const keepCost = applyShardCostMultiplier(KEEP_QUALITY_BUFF_COST);
+            keepRow.innerHTML = `
+              <div class="buff-main">
+                <strong>進化保持（剣質の記憶） LOCKED</strong>
+                <span>岩ランク10で解禁。岩ランク上昇時に剣質を保持。</span>
+                <span>コスト: ${formatNumber(keepCost)}欠片</span>
+              </div>
+              <button type="button" disabled>未解禁</button>
+            `;
+          } else {
+            const owned = Boolean(state.permanentBuffs.keepQualityOnRockAdvance);
+            const keepCost = applyShardCostMultiplier(KEEP_QUALITY_BUFF_COST);
+            const canBuy = !owned && state.sword.qualityShards >= keepCost;
+            keepRow.innerHTML = `
+              <div class="buff-main">
+                <strong>進化保持（剣質の記憶） ${owned ? "取得済み" : "未取得"}</strong>
+                <span>岩ランク上昇時、剣質段階を保持する。</span>
+                <span>コスト: ${formatNumber(keepCost)}欠片</span>
+              </div>
+              <button type="button" data-buff-key="keepQualityOnRockAdvance" ${canBuy ? "" : "disabled"}>${owned ? "取得済" : "取得"}</button>
+            `;
+          }
+          els.buffShopList.appendChild(keepRow);
+        } else {
+          els.buffShopWrap.style.display = "none";
+          els.buffShopList.innerHTML = "";
+        }
+        els.allocSharp.textContent = formatNumber(state.sword.allocSharpness);
+        els.allocDurability.textContent = formatNumber(state.sword.allocDurability);
+        els.allocQuality.textContent = currentSwordName();
+      } else {
+        els.upgradeQualityBtn.disabled = false;
+        els.unlockAutoBtn.disabled = false;
+        els.unlockAutoBtn.textContent = `自動攻撃を解禁（${AUTO_UNLOCK_COST}pt）`;
+        els.unlockDualWieldBtn.disabled = false;
+        els.toggleDualWieldBtn.disabled = false;
+        els.addSharpnessBtn.disabled = false;
+        els.addSharpness10Btn.disabled = false;
+        els.addSharpness100Btn.disabled = false;
+        els.addSharpnessMaxBtn.disabled = false;
+        els.addDurabilityBtn.disabled = false;
+        els.addDurability10Btn.disabled = false;
+        els.addDurability100Btn.disabled = false;
+        els.addDurabilityMaxBtn.disabled = false;
+        els.buffShopWrap.style.display = "none";
+        els.buffShopList.innerHTML = "";
+      }
+    }
+
+    els.attackBtn.addEventListener("click", attack);
+    els.autoToggleBtn.addEventListener("click", toggleAuto);
+    els.nextRockBtn.addEventListener("click", advanceToNextRock);
+    els.tabLogBtn.addEventListener("click", () => switchLeftTab("log"));
+    els.tabHistoryBtn.addEventListener("click", () => switchLeftTab("history"));
+    els.addSharpnessBtn.addEventListener("click", () => allocateByPoints("sharpness", 1));
+    els.addSharpness10Btn.addEventListener("click", () => allocateByPoints("sharpness", 10));
+    els.addSharpness100Btn.addEventListener("click", () => allocateByPoints("sharpness", 100));
+    els.addSharpnessMaxBtn.addEventListener("click", () => allocateMax("sharpness"));
+    els.addDurabilityBtn.addEventListener("click", () => allocateByPoints("durability", 1));
+    els.addDurability10Btn.addEventListener("click", () => allocateByPoints("durability", 10));
+    els.addDurability100Btn.addEventListener("click", () => allocateByPoints("durability", 100));
+    els.addDurabilityMaxBtn.addEventListener("click", () => allocateMax("durability"));
+    els.upgradeQualityBtn.addEventListener("click", upgradeQuality);
+    els.unlockAutoBtn.addEventListener("click", unlockAutoAttack);
+    els.unlockDualWieldBtn.addEventListener("click", unlockDualWield);
+    els.toggleDualWieldBtn.addEventListener("click", toggleDualWield);
+    els.rebirthResumeTop.addEventListener("click", resumeFromRebirth);
+    els.buffShopList.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const key = target.getAttribute("data-buff-key");
+      if (!key) return;
+      purchasePermanentBuff(key);
+    });
+    els.traitSelectList.addEventListener("click", (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const optionIndexText = target.getAttribute("data-option-index");
+      if (optionIndexText == null) return;
+      const optionIndex = Number(optionIndexText);
+      if (!Number.isInteger(optionIndex)) return;
+      confirmTraitSelection(optionIndex);
+    });
+    els.traitSelectModal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+    });
+    els.ultimateContinueBtn.addEventListener("click", closeUltimateClearModal);
+    els.ultimateHomeBtn.addEventListener("click", goHomeFromUltimate);
+    els.ultimateClearModal.addEventListener("cancel", (event) => {
+      event.preventDefault();
+    });
+    els.rebirthResume.addEventListener("click", resumeFromRebirth);
+    els.devToggleBtn.addEventListener("click", toggleDev);
+    els.rescueToggleBtn.addEventListener("click", toggleRescueMode);
+    els.resetBtn.addEventListener("click", resetGame);
+    els.startGameBtn.addEventListener("click", startGameFromTitle);
+
+    const loadResult = loadGame();
+    state.screen = loadResult.loaded ? "game" : "title";
+    refreshSwordStats();
+    if (!loadResult.loaded) {
+      addLog("極剣道 開始。剣闘で岩を砕け。剣が折れたら剣生せよ。");
+      if (loadResult.reason === "version_mismatch") {
+        addLog("セーブ互換性がないため初期化しました（進行仕様更新）。");
+      }
+    } else {
+      addLog("セーブデータをロードしました。");
+    }
+
+    if (!Number.isFinite(state.rock.maxHp) || state.rock.maxHp <= 0) {
+      state.rock.maxHp = calcRockMaxHp(state.rock.rockStage);
+      state.rock.hp = state.rock.maxHp;
+    }
+    checkRockUnlockLogs();
+
+    render();
+    ensureAutoLoopState();
+    setInterval(saveGame, 2500);
+  </script>
+</body>
+</html>

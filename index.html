@@ -291,6 +291,11 @@
       display: flex;
       gap: 8px;
       margin-bottom: 8px;
+      align-items: center;
+    }
+
+    .left-tabs .spacer {
+      margin-left: auto;
     }
 
     .tab-btn {
@@ -307,6 +312,12 @@
     .tab-btn.active {
       background: #39445a;
       border-color: #596a8a;
+    }
+
+    .tab-btn.toggle-on {
+      background: #1f5138;
+      border-color: #2b7a57;
+      color: #c8ffe4;
     }
 
     .history-panel {
@@ -922,6 +933,8 @@
         <div class="left-tabs">
           <button id="tabLogBtn" class="tab-btn active" type="button">ログ</button>
           <button id="tabHistoryBtn" class="tab-btn" type="button">剣歴</button>
+          <span class="spacer"></span>
+          <button id="infiniteRockBtn" class="tab-btn" type="button">無限</button>
         </div>
         <ul id="log"></ul>
         <div id="historyPanel" class="history-panel">
@@ -1270,6 +1283,7 @@
         quadWieldOn: false,
         autoUnlocked: false,
         autoOn: false,
+        infiniteRock: false,
         rescueMode: false,
         lastFlavorId: "",
         flavorUsedIds: [],
@@ -1348,6 +1362,7 @@
       swordRebirthBtn: document.getElementById("swordRebirthBtn"),
       tabLogBtn: document.getElementById("tabLogBtn"),
       tabHistoryBtn: document.getElementById("tabHistoryBtn"),
+      infiniteRockBtn: document.getElementById("infiniteRockBtn"),
       historyPanel: document.getElementById("historyPanel"),
       histTotalSlashes: document.getElementById("histTotalSlashes"),
       histTotalExp: document.getElementById("histTotalExp"),
@@ -2269,6 +2284,7 @@
       state.worldStar = clampStat(state.worldStar || 0);
       state.autoUnlocked = Boolean(state.autoUnlocked);
       state.autoOn = Boolean(state.autoOn);
+      state.infiniteRock = Boolean(state.infiniteRock);
       state.rescueMode = Boolean(state.rescueMode);
       state.lastFlavorId = typeof state.lastFlavorId === "string" ? state.lastFlavorId : "";
       state.flavorUsedIds = Array.isArray(state.flavorUsedIds) ? state.flavorUsedIds.map((v) => String(v)) : [];
@@ -2411,6 +2427,7 @@
 
         next.autoUnlocked = Boolean(parsed.autoUnlocked);
         next.autoOn = Boolean(parsed.autoOn);
+        next.infiniteRock = false;
         next.autoLoopEnabled = parsed.autoLoopEnabled === undefined ? true : Boolean(parsed.autoLoopEnabled);
         next.worldStar = Number.isFinite(parsed.worldStar) ? Math.max(0, Math.floor(parsed.worldStar)) : 0;
         next.dualWieldUnlocked = Boolean(parsed.dualWieldUnlocked);
@@ -2729,10 +2746,12 @@
       state.lastDamageBreakdown.base = clampStat(state.sword.baseSharpness);
       state.lastDamageBreakdown.additional = clampStat(state.sword.allocSharpness);
       state.lastDamageBreakdown.total = damage;
-      state.rock.hp = Math.max(0, state.rock.hp - damage);
-      if (!state.rockHalfFlavorChecked && beforeRockHp >= state.rock.maxHp * 0.5 && state.rock.hp < state.rock.maxHp * 0.5) {
-        state.rockHalfFlavorChecked = true;
-        tryRockFlavor();
+      if (!state.infiniteRock) {
+        state.rock.hp = Math.max(0, state.rock.hp - damage);
+        if (!state.rockHalfFlavorChecked && beforeRockHp >= state.rock.maxHp * 0.5 && state.rock.hp < state.rock.maxHp * 0.5) {
+          state.rockHalfFlavorChecked = true;
+          tryRockFlavor();
+        }
       }
       if (!noDurabilityLoss) {
         const durabilityCost = Math.ceil(1 * wield.durabilityMult);
@@ -2762,7 +2781,7 @@
         }
       }
 
-      if (state.rock.hp === 0) {
+      if (!state.infiniteRock && state.rock.hp === 0) {
         clearGame();
         return;
       }
@@ -3016,6 +3035,12 @@
       render();
     }
 
+    function toggleInfiniteRock() {
+      state.infiniteRock = !state.infiniteRock;
+      addLog(state.infiniteRock ? "無限岩に切り替えた。" : "通常岩に戻した。");
+      render();
+    }
+
     function resumeFromRebirth() {
       state.sword.durability = state.sword.maxDurability;
       state.history.totalRebirths = clampStat(state.history.totalRebirths + 1);
@@ -3086,6 +3111,8 @@
       const isHistory = state.leftTab === "history";
       els.tabLogBtn.classList.toggle("active", !isHistory);
       els.tabHistoryBtn.classList.toggle("active", isHistory);
+      els.infiniteRockBtn.textContent = state.infiniteRock ? "無限ON" : "無限";
+      els.infiniteRockBtn.classList.toggle("toggle-on", state.infiniteRock);
       els.log.style.display = isHistory ? "none" : "block";
       els.historyPanel.classList.toggle("show", isHistory);
 
@@ -3337,6 +3364,7 @@
     els.nextRockBtn.addEventListener("click", advanceToNextRock);
     els.tabLogBtn.addEventListener("click", () => switchLeftTab("log"));
     els.tabHistoryBtn.addEventListener("click", () => switchLeftTab("history"));
+    els.infiniteRockBtn.addEventListener("click", toggleInfiniteRock);
     els.addSharpnessBtn.addEventListener("click", () => allocateByPoints("sharpness", 1));
     els.addSharpness10Btn.addEventListener("click", () => allocateByPoints("sharpness", 10));
     els.addSharpness100Btn.addEventListener("click", () => allocateByPoints("sharpness", 100));

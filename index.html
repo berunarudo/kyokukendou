@@ -565,6 +565,12 @@
       min-height: 60px;
     }
 
+    .bottom-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
     .debug {
       background: #10141b;
       border: 1px dashed #44516a;
@@ -898,7 +904,6 @@
         <h2>岩の耐久値</h2>
         <div class="tools">
           <button id="autoToggleBtn" class="tool-btn hidden" type="button">AUTO OFF</button>
-          <button id="rebirthForceBtn" class="tool-btn" type="button">剣生</button>
           <button id="resetBtn" class="tool-btn" type="button">データリセット</button>
         </div>
       </div>
@@ -973,7 +978,10 @@
     </section>
 
     <section class="panel bottom">
-      <div id="swordNameText">現在の剣：ウッドソード</div>
+      <div class="bottom-row">
+        <div id="swordNameText">現在の剣：ウッドソード</div>
+        <button id="swordRebirthBtn" class="tool-btn" type="button">剣生</button>
+      </div>
     </section>
 
     <section id="debugPanel" class="debug">
@@ -1337,6 +1345,7 @@
       pointText: document.getElementById("pointText"),
       qualityShardText: document.getElementById("qualityShardText"),
       swordNameText: document.getElementById("swordNameText"),
+      swordRebirthBtn: document.getElementById("swordRebirthBtn"),
       tabLogBtn: document.getElementById("tabLogBtn"),
       tabHistoryBtn: document.getElementById("tabHistoryBtn"),
       historyPanel: document.getElementById("historyPanel"),
@@ -1364,7 +1373,6 @@
       debugQualityStage: document.getElementById("debugQualityStage"),
       debugRequiredXp: document.getElementById("debugRequiredXp"),
       debugQualityCost: document.getElementById("debugQualityCost"),
-      rebirthForceBtn: document.getElementById("rebirthForceBtn"),
       resetBtn: document.getElementById("resetBtn"),
       rebirthModal: document.getElementById("rebirthModal"),
       rebirthResumeTop: document.getElementById("rebirthResumeTop"),
@@ -2619,6 +2627,7 @@
       ) {
         return;
       }
+      addLog("剣を折り、剣生へ――");
       lockInputFor(250, () => {
         state.sword.durability = 0;
         handleSwordBreak();
@@ -3058,7 +3067,7 @@
       els.swordNameText.textContent = `現在の剣：${currentSwordName()}`;
 
       els.attackBtn.disabled = state.isInputLocked || state.isRebirth || state.gameCleared;
-      els.rebirthForceBtn.disabled = state.isRebirth || state.isInputLocked || state.gameCleared || state.effectFlags.clearPlaying || state.effectFlags.rockAdvancePlaying || state.effectFlags.breakPlaying;
+      els.swordRebirthBtn.disabled = state.isRebirth || state.isInputLocked || state.gameCleared || state.effectFlags.clearPlaying || state.effectFlags.rockAdvancePlaying || state.effectFlags.breakPlaying;
       els.attackBtnLabel.textContent = state.gameCleared ? "完了" : "剣闘";
       els.autoToggleBtn.classList.toggle("hidden", !isAutoAvailable());
       els.autoToggleBtn.textContent = state.autoOn ? `AUTO ON (${getAutoIntervalMs()}ms)` : "AUTO OFF";
@@ -3368,7 +3377,7 @@
     els.rebirthResume.addEventListener("click", resumeFromRebirth);
     els.devToggleBtn.addEventListener("click", toggleDev);
     els.rescueToggleBtn.addEventListener("click", toggleRescueMode);
-    els.rebirthForceBtn.addEventListener("click", forceRebirthFromButton);
+    els.swordRebirthBtn.addEventListener("click", forceRebirthFromButton);
     els.resetBtn.addEventListener("click", resetGame);
     els.startGameBtn.addEventListener("click", startGameFromTitle);
 

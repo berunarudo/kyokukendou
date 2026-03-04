@@ -1196,10 +1196,11 @@
       trainingMark: { name: "修練の刻印", maxLevel: 5, desc: "剣験値 +10% / Lv" },
       masteryProof: { name: "熟練の証", maxLevel: 3, desc: "LvUP時の剣ポイント +1 / Lv" },
       undyingBlade: { name: "不屈の刃", maxLevel: 3, desc: "剣の初期耐久 +20% / Lv" },
-      polishingSecret: { name: "研磨の極意", maxLevel: 5, desc: "切れ味の基礎値 +1 / Lv" },
+      polishingSecret: { name: "研磨の極意", maxLevel: 5, desc: "基礎切れ味 +20% / Lv" },
       sharpeningLevel: { name: "研ぎ澄まし", maxLevel: 9999, desc: "岩ランク由来の基礎切れ味補正を強化" },
       aftershockMark: { name: "余波の刻印", maxLevel: 3, desc: "イベント持続 +2クリック / Lv" },
-      qualityCostReductionLevel: { name: "鍛錬の効率化", maxLevel: 4, desc: "剣質アップ必要ptを軽減（Lv1:-15% ... Lv4:-60%）" }
+      qualityCostReductionLevel: { name: "鍛錬の効率化", maxLevel: 4, desc: "剣質アップ必要ptを軽減（Lv1:-15% ... Lv4:-60%）" },
+      coreLevel: { name: "岩核強化", maxLevel: 10, desc: "岩ランクボーナス全体倍率 +10% / Lv" }
     };
 
     function createInitialState() {
@@ -1238,6 +1239,7 @@
           sharpeningLevel: 0,
           aftershockMark: 0,
           qualityCostReductionLevel: 0,
+          coreLevel: 0,
           fastAuto: false,
           ultraFastAuto: false,
           quadWieldUnlocked: false,
@@ -1736,6 +1738,7 @@
       if (buffKey === "polishingSecret") return (lv + 1) * 18;
       if (buffKey === "sharpeningLevel") return 10 * (lv + 1);
       if (buffKey === "aftershockMark") return (lv + 1) * 25;
+      if (buffKey === "coreLevel") return (lv + 1) * 40;
       if (buffKey === "qualityCostReductionLevel") {
         if (state.rock.rockStage < 17) return Infinity;
         const table = [50, 120, 250, 500];
@@ -1879,11 +1882,13 @@
     function rockSharpnessBonusByStage(stage) {
       const base = rockSharpnessBaseByStage(stage);
       const sharpeningLv = getBuffLevel("sharpeningLevel");
-      return Math.floor(base * (1 + 0.15 * sharpeningLv));
+      return Math.floor(base * (1 + 0.15 * sharpeningLv) * rockBonusMultiplier());
     }
 
     function rockBonusMultiplier() {
-      return 1 + 0.20 * Math.max(0, Math.floor(state.worldStar || 0));
+      const starMult = 1 + 0.20 * Math.max(0, Math.floor(state.worldStar || 0));
+      const coreMult = 1 + 0.10 * getBuffLevel("coreLevel");
+      return starMult * coreMult;
     }
 
     function applyQualityPointGainMultiplier(basePoints) {
@@ -2158,11 +2163,15 @@
       return Math.min(0.15 * lv, 0.6);
     }
 
+    function qualityUpgradeMinCostRate() {
+      return (state.worldStar || 0) >= 1 ? 0.10 : 0.40;
+    }
+
     function nextQualityUpgradeCost() {
       const baseCost = baseQualityUpgradeCost();
       if (!Number.isFinite(baseCost)) return Infinity;
       const reduced = Math.ceil(baseCost * (1 - qualityUpgradeReductionRate()));
-      const floorCost = Math.ceil(baseCost * 0.4);
+      const floorCost = Math.ceil(baseCost * qualityUpgradeMinCostRate());
       return Math.max(floorCost, reduced);
     }
 
@@ -2178,10 +2187,12 @@
 
     function refreshSwordStats() {
       refreshRockBonus();
-      const sharpBoost = getBuffLevel("polishingSecret");
+      const sharpRate = 1 + 0.20 * getBuffLevel("polishingSecret");
       const rockSharpnessBonus = rockSharpnessBonusByStage(state.rock.rockStage);
       const durabilityRateBoost = getBuffLevel("undyingBlade") * 0.2;
-      state.sword.baseSharpness = clampStat(baseSharpnessByQuality(state.sword.quality) + sharpBoost + rockSharpnessBonus);
+      const qualityBaseSharpness = baseSharpnessByQuality(state.sword.quality);
+      const buffedBaseSharpness = Math.floor(qualityBaseSharpness * sharpRate);
+      state.sword.baseSharpness = clampStat(buffedBaseSharpness + rockSharpnessBonus);
       state.sword.baseDurability = clampStat(Math.floor(baseDurabilityByQuality(state.sword.quality) * (1 + durabilityRateBoost)));
       state.sword.sharpness = clampStat(state.sword.baseSharpness + state.sword.allocSharpness);
       state.sword.maxDurability = clampStat(state.sword.baseDurability + state.sword.allocDurability);
@@ -2224,6 +2235,7 @@
         sharpeningLevel: 0,
         aftershockMark: 0,
         qualityCostReductionLevel: 0,
+        coreLevel: 0,
         fastAuto: false,
         ultraFastAuto: false,
         quadWieldUnlocked: false,
@@ -2946,6 +2958,8 @@
       refreshSwordStats();
       if (buffKey === "sharpeningLevel") {
         addLog(`研ぎ澄ましが進んだ。（Lv${formatNumber(state.permanentBuffs.sharpeningLevel)}）`);
+      } else if (buffKey === "coreLevel") {
+        addLog(`岩核が強化された。（Lv${formatNumber(state.permanentBuffs.coreLevel)}）`);
       } else {
         addLog(`永続バフ『${def.name}』を強化した。`);
       }
@@ -2983,6 +2997,7 @@
       const qualityGainMult = qualityGainMultiplierByRockStage(state.rock.rockStage);
       const shardCostMult = shardCostMultiplierByRockStage(state.rock.rockStage);
       const compressMult = rockBonusMultiplier();
+      const coreBonusMult = 1 + 0.10 * getBuffLevel("coreLevel");
       const rockSharpnessBonus = rockSharpnessBonusByStage(state.rock.rockStage);
       const starEffects = [
         (state.worldStar || 0) >= 2 ? "☆2:剣保持" : "☆2:未",
@@ -2991,7 +3006,7 @@
       ].join(" / ");
 
       els.rockStageText.textContent = `岩ランク：${formatNumber(state.rock.rockStage)} ☆${formatNumber(state.worldStar || 0)}`;
-      els.rockBonusText.textContent = `岩ランクボーナス：XP ×${state.rock.xpMultiplier.toFixed(2)} / LvUP +${formatNumber(state.rock.levelPointGain)}pt / 剣Pt獲得 ×${qualityGainMult.toFixed(2)} / 欠片 ×${shardMultiplierByRockStage(state.rock.rockStage).toFixed(2)} / 欠片消費 ×${shardCostMult.toFixed(2)} / 基礎切れ味 +${formatNumber(rockSharpnessBonus)} / 凝縮ボーナス ×${compressMult.toFixed(2)} / ${starEffects}`;
+      els.rockBonusText.textContent = `岩ランクボーナス：XP ×${state.rock.xpMultiplier.toFixed(2)} / LvUP +${formatNumber(state.rock.levelPointGain)}pt / 剣Pt獲得 ×${qualityGainMult.toFixed(2)} / 欠片 ×${shardMultiplierByRockStage(state.rock.rockStage).toFixed(2)} / 欠片消費 ×${shardCostMult.toFixed(2)} / 基礎切れ味 +${formatNumber(rockSharpnessBonus)} / 岩核強化 ×${coreBonusMult.toFixed(2)} / 凝縮ボーナス ×${compressMult.toFixed(2)} / ${starEffects}`;
       els.rockTraitText.textContent = `岩の性質：${trait.name}（${trait.description}）`;
       els.wieldStatusText.textContent = `流派：${wield.name}（${wield.name === "通常" ? "OFF" : "ON"}）`;
       els.activeEventText.textContent = state.activeEvent
@@ -3059,8 +3074,9 @@
       const qBaseCost = baseQualityUpgradeCost();
       const qCost = nextQualityUpgradeCost();
       const reductionRate = qualityUpgradeReductionRate();
+      const minCostRate = qualityUpgradeMinCostRate();
       els.devQualityCostCalc.textContent = Number.isFinite(qCost)
-        ? `${formatNumber(qCost)} = max(ceil(${formatNumber(qBaseCost)}*0.4), ceil(${formatNumber(qBaseCost)}*(1-${(reductionRate * 100).toFixed(0)}%)))`
+        ? `${formatNumber(qCost)} = max(ceil(${formatNumber(qBaseCost)}*${minCostRate.toFixed(2)}), ceil(${formatNumber(qBaseCost)}*(1-${(reductionRate * 100).toFixed(0)}%)))`
         : "MAX";
 
       els.devDamageBreakdown.textContent = `${formatNumber(state.lastDamageBreakdown.total)} = ${formatNumber(state.lastDamageBreakdown.base)} + ${formatNumber(state.lastDamageBreakdown.additional)}`;
@@ -3072,7 +3088,7 @@
       els.devEventState.textContent = state.activeEvent
         ? `activeEvent.types=[${state.activeEvent.types.join(",")}] / remainingClicks=${formatNumber(state.activeEvent.remainingClicks)} / isCombo=${state.activeEvent.isCombo}`
         : "activeEvent=null";
-      els.devQualityGainMult.textContent = `剣Pt獲得倍率=${qualityGainMult.toFixed(2)} (1 + 0.10 * (${formatNumber(state.rock.rockStage)} - 1))`;
+      els.devQualityGainMult.textContent = `剣Pt獲得倍率=${qualityGainMult.toFixed(2)}（岩ランク倍率×凝縮倍率×岩核倍率）`;
 
       if (state.debugMode) {
         els.devStateJson.textContent = JSON.stringify(state, null, 2);
@@ -3113,7 +3129,7 @@
         els.modalPoints.textContent = `剣ポイント: ${formatNumber(state.sword.points)}`;
         els.modalShards.textContent = `剣質片: ${formatNumber(state.sword.qualityShards)}`;
         els.modalQualityCost.textContent = Number.isFinite(qCost)
-          ? `次の剣質アップコスト: ${formatNumber(qCost)}pt（基礎${formatNumber(qBaseCost)}pt / 軽減${(reductionRate * 100).toFixed(0)}%）`
+          ? `次の剣質アップコスト: ${formatNumber(qCost)}pt（基礎${formatNumber(qBaseCost)}pt / 軽減${(reductionRate * 100).toFixed(0)}% / 下限${(minCostRate * 100).toFixed(0)}%）`
           : "剣質は最大ランクです";
         els.upgradeQualityBtn.disabled = !Number.isFinite(qCost) || state.sword.points < qCost;
         const canSpend1 = state.sword.points >= 1;

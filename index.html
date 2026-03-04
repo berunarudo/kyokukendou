@@ -898,6 +898,7 @@
         <h2>岩の耐久値</h2>
         <div class="tools">
           <button id="autoToggleBtn" class="tool-btn hidden" type="button">AUTO OFF</button>
+          <button id="rebirthForceBtn" class="tool-btn" type="button">剣生</button>
           <button id="resetBtn" class="tool-btn" type="button">データリセット</button>
         </div>
       </div>
@@ -1363,6 +1364,7 @@
       debugQualityStage: document.getElementById("debugQualityStage"),
       debugRequiredXp: document.getElementById("debugRequiredXp"),
       debugQualityCost: document.getElementById("debugQualityCost"),
+      rebirthForceBtn: document.getElementById("rebirthForceBtn"),
       resetBtn: document.getElementById("resetBtn"),
       rebirthModal: document.getElementById("rebirthModal"),
       rebirthResumeTop: document.getElementById("rebirthResumeTop"),
@@ -1867,7 +1869,8 @@
     }
 
     function starPointGainMultiplier() {
-      return (state.worldStar || 0) >= 3 ? 2 : 1;
+      const star = Math.max(0, Math.floor(state.worldStar || 0));
+      return Math.max(1, star * 10);
     }
 
     function starShardGainMultiplier() {
@@ -1895,6 +1898,12 @@
       const base = Math.max(0, basePoints);
       const mult = qualityGainMultiplierByRockStage(state.rock.rockStage) * starPointGainMultiplier();
       return Math.max(1, Math.floor(base * mult));
+    }
+
+    function grantSwordPoints(basePoints) {
+      const gained = applyQualityPointGainMultiplier(basePoints);
+      state.sword.points = clampStat(state.sword.points + gained);
+      return gained;
     }
 
     function currentWieldState() {
@@ -2160,19 +2169,16 @@
 
     function qualityUpgradeReductionRate() {
       const lv = getBuffLevel("qualityCostReductionLevel");
-      return Math.min(0.15 * lv, 0.6);
-    }
-
-    function qualityUpgradeMinCostRate() {
-      return (state.worldStar || 0) >= 1 ? 0.10 : 0.40;
+      return 0.15 * lv;
     }
 
     function nextQualityUpgradeCost() {
       const baseCost = baseQualityUpgradeCost();
       if (!Number.isFinite(baseCost)) return Infinity;
-      const reduced = Math.ceil(baseCost * (1 - qualityUpgradeReductionRate()));
-      const floorCost = Math.ceil(baseCost * qualityUpgradeMinCostRate());
-      return Math.max(floorCost, reduced);
+      const reductionRate = qualityUpgradeReductionRate();
+      return Math.ceil(
+        Math.max(baseCost * 0.10, baseCost * (1 - reductionRate))
+      );
     }
 
     function calcRockMaxHp(stage) {
@@ -2541,6 +2547,7 @@
         if (state.worldStar === 3) addLog("剣Ptの巡りが倍化した。");
         if (state.worldStar === 4) addLog("欠片が倍に実る。");
         if (state.worldStar === 5) addLog("称号が刻まれた――切れ続ける者。");
+        if (state.worldStar === 5) addLog("剣Ptの奔流が解放された。");
         tryRockFlavor({ force: true });
         resetForCompression();
       });
@@ -2557,9 +2564,8 @@
       while (state.sword.exp >= expRequiredForLevel(state.sword.level)) {
         state.sword.level += 1;
         const gainedPointsBase = state.rock.levelPointGain + getBuffLevel("masteryProof");
-        const gainedPoints = applyQualityPointGainMultiplier(gainedPointsBase);
+        const gainedPoints = grantSwordPoints(gainedPointsBase);
         const gainedShards = qualityShardGainByRockStage(state.rock.rockStage);
-        state.sword.points = clampStat(state.sword.points + gainedPoints);
         if (gainedShards > 0) {
           state.sword.qualityShards = clampStat(state.sword.qualityShards + gainedShards);
           addLog(`剣力レベルが ${state.sword.level} に上昇。剣ポイント +${formatNumber(gainedPoints)} / 剣質片 +${formatNumber(gainedShards)}。`);
@@ -2576,7 +2582,9 @@
       state.rock.hp = 0;
       state.gameCleared = true;
       if (!state.clearLogged) {
+        const clearReward = grantSwordPoints(calcClearReward(state.rock.rockStage));
         addLog("岩を断った。");
+        addLog(`剣ポイント +${formatNumber(clearReward)}。`);
         state.clearLogged = true;
       }
       playClear();
@@ -2588,6 +2596,33 @@
       }, 3000);
       saveGame();
       render();
+    }
+
+    function handleSwordBreak() {
+      if (state.isRebirth || state.effectFlags.breakPlaying) return;
+      addLog("――剣が折れた。");
+      addLog("剣生へ。");
+      stopAutoLoop();
+      playBreak();
+      saveGame();
+      render();
+    }
+
+    function forceRebirthFromButton() {
+      if (
+        state.isRebirth ||
+        state.isInputLocked ||
+        state.gameCleared ||
+        state.effectFlags.clearPlaying ||
+        state.effectFlags.rockAdvancePlaying ||
+        state.effectFlags.breakPlaying
+      ) {
+        return;
+      }
+      lockInputFor(250, () => {
+        state.sword.durability = 0;
+        handleSwordBreak();
+      });
     }
 
     function finalizeAdvanceToNextRock(nextStage, traitConfig) {
@@ -2724,12 +2759,7 @@
       }
 
       if (state.sword.durability === 0) {
-        addLog("――剣が折れた。");
-        addLog("剣生へ。");
-        stopAutoLoop();
-        playBreak();
-        saveGame();
-        render();
+        handleSwordBreak();
         return;
       }
 
@@ -2999,14 +3029,16 @@
       const compressMult = rockBonusMultiplier();
       const coreBonusMult = 1 + 0.10 * getBuffLevel("coreLevel");
       const rockSharpnessBonus = rockSharpnessBonusByStage(state.rock.rockStage);
+      const starPointMult = starPointGainMultiplier();
       const starEffects = [
         (state.worldStar || 0) >= 2 ? "☆2:剣保持" : "☆2:未",
-        (state.worldStar || 0) >= 3 ? "☆3:剣Ptx2" : "☆3:未",
-        (state.worldStar || 0) >= 4 ? "☆4:欠片x2" : "☆4:未"
+        (state.worldStar || 0) >= 1 ? `☆剣Pt×${formatNumber(starPointMult)}` : "☆剣Pt×1",
+        (state.worldStar || 0) >= 4 ? "☆4:欠片x2" : "☆4:未",
+        (state.worldStar || 0) >= 5 ? "☆5到達" : "☆5未到達"
       ].join(" / ");
 
       els.rockStageText.textContent = `岩ランク：${formatNumber(state.rock.rockStage)} ☆${formatNumber(state.worldStar || 0)}`;
-      els.rockBonusText.textContent = `岩ランクボーナス：XP ×${state.rock.xpMultiplier.toFixed(2)} / LvUP +${formatNumber(state.rock.levelPointGain)}pt / 剣Pt獲得 ×${qualityGainMult.toFixed(2)} / 欠片 ×${shardMultiplierByRockStage(state.rock.rockStage).toFixed(2)} / 欠片消費 ×${shardCostMult.toFixed(2)} / 基礎切れ味 +${formatNumber(rockSharpnessBonus)} / 岩核強化 ×${coreBonusMult.toFixed(2)} / 凝縮ボーナス ×${compressMult.toFixed(2)} / ${starEffects}`;
+      els.rockBonusText.textContent = `岩ランクボーナス：XP ×${state.rock.xpMultiplier.toFixed(2)} / LvUP +${formatNumber(state.rock.levelPointGain)}pt / 剣Pt獲得 ×${qualityGainMult.toFixed(2)} / ☆ボーナス：剣Pt獲得 ×${formatNumber(starPointMult)} / 欠片 ×${shardMultiplierByRockStage(state.rock.rockStage).toFixed(2)} / 欠片消費 ×${shardCostMult.toFixed(2)} / 基礎切れ味 +${formatNumber(rockSharpnessBonus)} / 岩核強化 ×${coreBonusMult.toFixed(2)} / 凝縮ボーナス ×${compressMult.toFixed(2)} / ${starEffects}`;
       els.rockTraitText.textContent = `岩の性質：${trait.name}（${trait.description}）`;
       els.wieldStatusText.textContent = `流派：${wield.name}（${wield.name === "通常" ? "OFF" : "ON"}）`;
       els.activeEventText.textContent = state.activeEvent
@@ -3026,6 +3058,7 @@
       els.swordNameText.textContent = `現在の剣：${currentSwordName()}`;
 
       els.attackBtn.disabled = state.isInputLocked || state.isRebirth || state.gameCleared;
+      els.rebirthForceBtn.disabled = state.isRebirth || state.isInputLocked || state.gameCleared || state.effectFlags.clearPlaying || state.effectFlags.rockAdvancePlaying || state.effectFlags.breakPlaying;
       els.attackBtnLabel.textContent = state.gameCleared ? "完了" : "剣闘";
       els.autoToggleBtn.classList.toggle("hidden", !isAutoAvailable());
       els.autoToggleBtn.textContent = state.autoOn ? `AUTO ON (${getAutoIntervalMs()}ms)` : "AUTO OFF";
@@ -3074,9 +3107,9 @@
       const qBaseCost = baseQualityUpgradeCost();
       const qCost = nextQualityUpgradeCost();
       const reductionRate = qualityUpgradeReductionRate();
-      const minCostRate = qualityUpgradeMinCostRate();
+      const minCostRate = 0.10;
       els.devQualityCostCalc.textContent = Number.isFinite(qCost)
-        ? `${formatNumber(qCost)} = max(ceil(${formatNumber(qBaseCost)}*${minCostRate.toFixed(2)}), ceil(${formatNumber(qBaseCost)}*(1-${(reductionRate * 100).toFixed(0)}%)))`
+        ? `${formatNumber(qCost)} = ceil(max(${formatNumber(qBaseCost)}*${minCostRate.toFixed(2)}, ${formatNumber(qBaseCost)}*(1-${(reductionRate * 100).toFixed(0)}%)))`
         : "MAX";
 
       els.devDamageBreakdown.textContent = `${formatNumber(state.lastDamageBreakdown.total)} = ${formatNumber(state.lastDamageBreakdown.base)} + ${formatNumber(state.lastDamageBreakdown.additional)}`;
@@ -3088,7 +3121,7 @@
       els.devEventState.textContent = state.activeEvent
         ? `activeEvent.types=[${state.activeEvent.types.join(",")}] / remainingClicks=${formatNumber(state.activeEvent.remainingClicks)} / isCombo=${state.activeEvent.isCombo}`
         : "activeEvent=null";
-      els.devQualityGainMult.textContent = `剣Pt獲得倍率=${qualityGainMult.toFixed(2)}（岩ランク倍率×凝縮倍率×岩核倍率）`;
+      els.devQualityGainMult.textContent = `剣Pt獲得倍率=${(qualityGainMult * starPointMult).toFixed(2)}（岩ランク倍率×凝縮倍率×岩核倍率×☆倍率）`;
 
       if (state.debugMode) {
         els.devStateJson.textContent = JSON.stringify(state, null, 2);
@@ -3129,7 +3162,7 @@
         els.modalPoints.textContent = `剣ポイント: ${formatNumber(state.sword.points)}`;
         els.modalShards.textContent = `剣質片: ${formatNumber(state.sword.qualityShards)}`;
         els.modalQualityCost.textContent = Number.isFinite(qCost)
-          ? `次の剣質アップコスト: ${formatNumber(qCost)}pt（基礎${formatNumber(qBaseCost)}pt / 軽減${(reductionRate * 100).toFixed(0)}% / 下限${(minCostRate * 100).toFixed(0)}%）`
+          ? `次の剣質アップコスト: ${formatNumber(qCost)}pt（基礎${formatNumber(qBaseCost)}pt / 軽減${(reductionRate * 100).toFixed(0)}% / 最低コスト10%）`
           : "剣質は最大ランクです";
         els.upgradeQualityBtn.disabled = !Number.isFinite(qCost) || state.sword.points < qCost;
         const canSpend1 = state.sword.points >= 1;
@@ -3335,6 +3368,7 @@
     els.rebirthResume.addEventListener("click", resumeFromRebirth);
     els.devToggleBtn.addEventListener("click", toggleDev);
     els.rescueToggleBtn.addEventListener("click", toggleRescueMode);
+    els.rebirthForceBtn.addEventListener("click", forceRebirthFromButton);
     els.resetBtn.addEventListener("click", resetGame);
     els.startGameBtn.addEventListener("click", startGameFromTitle);
 
